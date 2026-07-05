@@ -287,18 +287,10 @@ def validar():
         return jsonify({"ok":False,"error":str(e)}), 500
 
 
-@app.route("/generar-informe", methods=["POST"])
-def generar_informe():
-    try:
-        usuario  = session.get("usuario",{})
-        analisis = session.get("analisis",{})
-        carta    = analisis.get("carta",{})
-        dm       = carta.get("dia_maestro",{})
-        cinco_e  = analisis.get("cinco_elementos",{})
-        sexo     = usuario.get("sexo","mujer")
-
-        prompt = f"""Sos un astrólogo experto en BaZi (astrología china de los 4 pilares).
-Generá un informe profesional en español para {usuario.get('nombre')},
+def _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo):
+    """Arma el bloque de datos de la carta, compartido por ambas llamadas al informe."""
+    return f"""Sos un astrólogo experto en BaZi (astrología china de los 4 pilares).
+Estás generando un informe profesional en español para {usuario.get('nombre')},
 nacido/a el {usuario.get('fecha')} a las {usuario.get('hora')}, sexo: {sexo}.
 
 ═══════════════════════════════════
@@ -352,23 +344,32 @@ SALUD ESPECIAL:
 
 MUERTE Y VACÍO (animales):
 {json.dumps(analisis.get('muerte_vacio',[]), ensure_ascii=False)}
+"""
 
-═══════════════════════════════════
-INSTRUCCIONES DEL INFORME
-═══════════════════════════════════
 
-Generá exactamente 10 secciones en este orden. Respondé ÚNICAMENTE con JSON válido, sin markdown ni explicaciones:
+PAUTAS_GENERALES = """
+═══════════════════════════════════
+PAUTAS GENERALES
+═══════════════════════════════════
+- Cada sección: texto fluido y profesional, párrafos bien desarrollados
+- Tono: cálido, profesional, orientado al crecimiento personal
+- Sexo del consultante: {sexo} — usar pronombres correctos
+- NO incluir tablas en el JSON, solo texto fluido
+- Respondé ÚNICAMENTE con el JSON, sin markdown ni explicaciones previas, en este formato exacto:
 
 {{
   "secciones": [
-    {{
-      "numero": "01",
-      "titulo": "El día maestro",
-      "texto": "..."
-    }},
+    {{"numero": "01", "titulo": "...", "texto": "..."}},
     ...
   ]
 }}
+"""
+
+INSTRUCCIONES_PARTE_1 = """
+═══════════════════════════════════
+INSTRUCCIONES DEL INFORME — PARTE 1 (secciones 01 a 05)
+═══════════════════════════════════
+Generá EXACTAMENTE estas 5 secciones, en este orden:
 
 SECCIÓN 01 — El día maestro
 Incluir:
@@ -402,6 +403,13 @@ SECCIÓN 05 — Combinaciones
 - SOLO combinaciones positivas (troncos y ramas)
 - Indicar tipo (direccional/estacional/elemental), animales, pilares involucrados, elemento que genera
 - Si no hay combinaciones, mencionarlo y explicar qué significa energéticamente
+"""
+
+INSTRUCCIONES_PARTE_2 = """
+═══════════════════════════════════
+INSTRUCCIONES DEL INFORME — PARTE 2 (secciones 06 a 10)
+═══════════════════════════════════
+Generá EXACTAMENTE estas 5 secciones, en este orden:
 
 SECCIÓN 06 — Conflictos
 Separar en dos bloques:
@@ -409,6 +417,7 @@ BLOQUE A — Conflictos de ramas (choques, daños, destrucciones, castigos):
 - Para cada uno: tipo, animales, pilares, efecto, aspecto psicológico si existe, personas involucradas según sexo
 BLOQUE B — Conflictos de troncos:
 - Para cada uno: descripción, efecto, pilares, ámbito, personas involucradas
+- Sección 06: separar CLARAMENTE combinaciones de conflictos
 
 SECCIÓN 07 — Salud
 - Elementos en exceso y carencia con órganos afectados y emoción negativa asociada
@@ -422,7 +431,7 @@ Incluir en este orden:
 3. Hombre/Mujer noble: animales y cuándo se activan
 4. Relaciones kármicas detectadas: descripción del par y en qué pilares aparece
 5. Casamentero detectado: pares y pilares
-6. Pilares afines y muerte y vacío: animales de MV ({analisis.get('muerte_vacio',[])}), en qué pilares aparecen y qué puede significar
+6. Pilares afines y muerte y vacío: animales de MV ({muerte_vacio}), en qué pilares aparecen y qué puede significar
 7. Si algún par es a la vez kármico y casamentero, mencionar la dualidad
 
 SECCIÓN 09 — Pilares de la suerte
@@ -435,26 +444,46 @@ SECCIÓN 10 — Recomendaciones finales
 - Mínimo 6 recomendaciones concretas y prácticas
 - Basadas en todo el análisis anterior
 - Tono cálido, orientado al crecimiento personal
+"""
 
-═══════════════════════════════════
-PAUTAS GENERALES
-═══════════════════════════════════
-- Cada sección: texto fluido y profesional, párrafos bien desarrollados
-- Sección 03: aclarar SIEMPRE que los pilares móviles son transitorios
-- Sección 06: separar CLARAMENTE combinaciones de conflictos
-- Tono: cálido, profesional, orientado al crecimiento personal
-- Sexo del consultante: {sexo} — usar pronombres correctos
-- NO incluir tablas en el JSON, solo texto fluido
-- Respondé ÚNICAMENTE con el JSON, sin markdown ni explicaciones previas"""
 
-        response = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=4000,
-            messages=[{"role":"user","content":prompt}]
-        )
-        raw = response.content[0].text.strip()
-        raw = raw.replace("```json","").replace("```","").strip()
-        informe = json.loads(raw)
+def _llamar_claude_secciones(prompt, max_tokens=2000):
+    """Llama a Claude y devuelve la lista de secciones (parseada de JSON)."""
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = response.content[0].text.strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
+    data = json.loads(raw)
+    return data.get("secciones", [])
+
+
+@app.route("/generar-informe", methods=["POST"])
+def generar_informe():
+    try:
+        usuario  = session.get("usuario",{})
+        analisis = session.get("analisis",{})
+        carta    = analisis.get("carta",{})
+        dm       = carta.get("dia_maestro",{})
+        cinco_e  = analisis.get("cinco_elementos",{})
+        sexo     = usuario.get("sexo","mujer")
+
+        datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
+        pautas = PAUTAS_GENERALES.format(sexo=sexo)
+
+        # Partimos la generación en dos llamadas más cortas para no superar
+        # el límite de 30s del router de Heroku.
+        prompt_1 = datos_carta + INSTRUCCIONES_PARTE_1 + pautas
+        prompt_2 = datos_carta + INSTRUCCIONES_PARTE_2.format(
+            muerte_vacio=analisis.get('muerte_vacio', [])
+        ) + pautas
+
+        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=2000)
+        secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=2000)
+
+        informe = {"secciones": secciones_1 + secciones_2}
         session["informe"] = informe
         return jsonify({"ok":True,"informe":informe})
 
