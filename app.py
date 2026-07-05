@@ -545,34 +545,56 @@ def _llamar_claude_secciones(prompt, max_tokens=4000):
     return data.get("secciones", [])
 
 
+def _generar_seccion_con_reintento(datos_carta, instrucciones, pautas, numero, titulo):
+    """Genera una sección individual. Si se corta por límite de tokens,
+    reintenta una vez con más margen. Si igual falla, devuelve un
+    placeholder en vez de tirar abajo todo el informe."""
+    prompt = datos_carta + instrucciones + pautas
+    for intento, tokens in enumerate([4096, 6000], start=1):
+        try:
+            return _llamar_claude_secciones(prompt, max_tokens=tokens)
+        except Exception as e:
+            if intento == 2:
+                return [{
+                    "numero": numero,
+                    "titulo": titulo,
+                    "texto": (
+                        "⚠️ Esta sección no pudo generarse automáticamente "
+                        f"(motivo: {e}). Usá el botón para regenerarla o "
+                        "editá este texto manualmente."
+                    ),
+                }]
+    return []
+
+
 def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e, sexo):
     """Corre en un hilo aparte: llama a Claude una vez por cada una de las
     10 secciones (lo más chico posible, mínimo riesgo de corte por límite
     de tokens) y va actualizando el progreso en disco para que el
-    frontend pueda consultarlo."""
+    frontend pueda consultarlo. Si una sección puntual falla, se reemplaza
+    por un placeholder en vez de abortar la generación completa."""
     try:
         datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
         muerte_vacio = analisis.get('muerte_vacio', [])
 
         secciones_instrucciones = [
-            INSTRUCCIONES_SECCION_01,
-            INSTRUCCIONES_SECCION_02,
-            INSTRUCCIONES_SECCION_03,
-            INSTRUCCIONES_SECCION_04,
-            INSTRUCCIONES_SECCION_05,
-            INSTRUCCIONES_SECCION_06,
-            INSTRUCCIONES_SECCION_07,
-            INSTRUCCIONES_SECCION_08.format(muerte_vacio=muerte_vacio),
-            INSTRUCCIONES_SECCION_09,
-            INSTRUCCIONES_SECCION_10,
+            ("01", "El día maestro", INSTRUCCIONES_SECCION_01),
+            ("02", "Análisis de los 4 pilares", INSTRUCCIONES_SECCION_02),
+            ("03", "Carta móvil", INSTRUCCIONES_SECCION_03),
+            ("04", "Los 5 elementos — balance y finanzas", INSTRUCCIONES_SECCION_04),
+            ("05", "Combinaciones", INSTRUCCIONES_SECCION_05),
+            ("06", "Conflictos", INSTRUCCIONES_SECCION_06),
+            ("07", "Salud", INSTRUCCIONES_SECCION_07),
+            ("08", "Relaciones", INSTRUCCIONES_SECCION_08.format(muerte_vacio=muerte_vacio)),
+            ("09", "Pilares de la suerte", INSTRUCCIONES_SECCION_09),
+            ("10", "Recomendaciones finales", INSTRUCCIONES_SECCION_10),
         ]
 
         secciones_acumuladas = []
         total = len(secciones_instrucciones)
-        for i, instrucciones in enumerate(secciones_instrucciones, start=1):
-            prompt = datos_carta + instrucciones + pautas
-            secciones = _llamar_claude_secciones(prompt, max_tokens=2500)
+        for i, (numero, titulo, instrucciones) in enumerate(secciones_instrucciones, start=1):
+            secciones = _generar_seccion_con_reintento(datos_carta, instrucciones, pautas, numero, titulo)
             secciones_acumuladas += secciones
             _job_escribir(job_id, {
                 "status": "running", "secciones": secciones_acumuladas,
