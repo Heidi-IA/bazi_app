@@ -460,8 +460,8 @@ def _llamar_claude_secciones(prompt, max_tokens=2000):
     return data.get("secciones", [])
 
 
-@app.route("/generar-informe", methods=["POST"])
-def generar_informe():
+@app.route("/generar-informe-1", methods=["POST"])
+def generar_informe_1():
     try:
         usuario  = session.get("usuario",{})
         analisis = session.get("analisis",{})
@@ -472,20 +472,42 @@ def generar_informe():
 
         datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
-
-        # Partimos la generación en dos llamadas más cortas para no superar
-        # el límite de 30s del router de Heroku.
         prompt_1 = datos_carta + INSTRUCCIONES_PARTE_1 + pautas
+
+        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=2000)
+
+        # Guardamos el progreso parcial en sesión para poder combinarlo
+        # con la parte 2 más adelante.
+        session["informe_parcial"] = secciones_1
+        return jsonify({"ok":True,"secciones":secciones_1})
+
+    except Exception as e:
+        return jsonify({"ok":False,"error":str(e)}), 500
+
+
+@app.route("/generar-informe-2", methods=["POST"])
+def generar_informe_2():
+    try:
+        usuario  = session.get("usuario",{})
+        analisis = session.get("analisis",{})
+        carta    = analisis.get("carta",{})
+        dm       = carta.get("dia_maestro",{})
+        cinco_e  = analisis.get("cinco_elementos",{})
+        sexo     = usuario.get("sexo","mujer")
+
+        datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
+        pautas = PAUTAS_GENERALES.format(sexo=sexo)
         prompt_2 = datos_carta + INSTRUCCIONES_PARTE_2.format(
             muerte_vacio=analisis.get('muerte_vacio', [])
         ) + pautas
 
-        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=2000)
         secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=2000)
 
+        secciones_1 = session.get("informe_parcial", [])
         informe = {"secciones": secciones_1 + secciones_2}
         session["informe"] = informe
-        return jsonify({"ok":True,"informe":informe})
+        session.pop("informe_parcial", None)
+        return jsonify({"ok":True,"secciones":secciones_2,"informe":informe})
 
     except Exception as e:
         return jsonify({"ok":False,"error":str(e)}), 500
