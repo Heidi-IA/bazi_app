@@ -408,11 +408,11 @@ PAUTAS GENERALES
 }}
 """
 
-INSTRUCCIONES_PARTE_1 = """
+INSTRUCCIONES_PARTE_A = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 1 (secciones 01 a 05)
+INSTRUCCIONES DEL INFORME — PARTE 1 de 4 (secciones 01 a 02)
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 5 secciones, en este orden:
+Generá EXACTAMENTE estas 2 secciones, en este orden:
 
 SECCIÓN 01 — El día maestro
 Incluir:
@@ -428,6 +428,13 @@ Para cada pilar (Año, Mes, Día, Hora):
 - Incluir descripción específica animal+elemento (desc_especifica) si existe
 - Incluir combo_dioses si hay combinaciones detectadas
 - Un párrafo fluido por pilar
+"""
+
+INSTRUCCIONES_PARTE_B = """
+═══════════════════════════════════
+INSTRUCCIONES DEL INFORME — PARTE 2 de 4 (secciones 03 a 05)
+═══════════════════════════════════
+Generá EXACTAMENTE estas 3 secciones, en este orden:
 
 SECCIÓN 03 — Carta móvil (pilares transitorios)
 - Analizar pilar de suerte y año en curso
@@ -448,11 +455,11 @@ SECCIÓN 05 — Combinaciones
 - Si no hay combinaciones, mencionarlo y explicar qué significa energéticamente
 """
 
-INSTRUCCIONES_PARTE_2 = """
+INSTRUCCIONES_PARTE_C = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 2 (secciones 06 a 10)
+INSTRUCCIONES DEL INFORME — PARTE 3 de 4 (secciones 06 a 07)
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 5 secciones, en este orden:
+Generá EXACTAMENTE estas 2 secciones, en este orden:
 
 SECCIÓN 06 — Conflictos
 Separar en dos bloques:
@@ -466,6 +473,13 @@ SECCIÓN 07 — Salud
 - Elementos en exceso y carencia con órganos afectados y emoción negativa asociada
 - Conflictos detectados y su impacto en salud (por dioses involucrados)
 - Combinaciones especiales de salud si existen
+"""
+
+INSTRUCCIONES_PARTE_D = """
+═══════════════════════════════════
+INSTRUCCIONES DEL INFORME — PARTE 4 de 4 (secciones 08 a 10)
+═══════════════════════════════════
+Generá EXACTAMENTE estas 3 secciones, en este orden:
 
 SECCIÓN 08 — Relaciones
 Incluir en este orden:
@@ -488,6 +502,7 @@ SECCIÓN 10 — Recomendaciones finales
 - Basadas en todo el análisis anterior
 - Tono cálido, orientado al crecimiento personal
 """
+
 
 
 def _llamar_claude_secciones(prompt, max_tokens=4000):
@@ -513,27 +528,33 @@ def _llamar_claude_secciones(prompt, max_tokens=4000):
 
 
 def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e, sexo):
-    """Corre en un hilo aparte: llama a Claude dos veces y va actualizando
-    el progreso en disco para que el frontend pueda consultarlo, sin
-    importar qué worker de Heroku atienda cada request."""
+    """Corre en un hilo aparte: llama a Claude 4 veces (partes más chicas,
+    menos riesgo de que se corte por límite de tokens) y va actualizando
+    el progreso en disco para que el frontend pueda consultarlo."""
     try:
         datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
+        muerte_vacio = analisis.get('muerte_vacio', [])
 
-        prompt_1 = datos_carta + INSTRUCCIONES_PARTE_1 + pautas
-        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=4000)
+        partes = [
+            INSTRUCCIONES_PARTE_A,
+            INSTRUCCIONES_PARTE_B,
+            INSTRUCCIONES_PARTE_C,
+            INSTRUCCIONES_PARTE_D.format(muerte_vacio=muerte_vacio),
+        ]
+
+        secciones_acumuladas = []
+        for i, instrucciones in enumerate(partes, start=1):
+            prompt = datos_carta + instrucciones + pautas
+            secciones = _llamar_claude_secciones(prompt, max_tokens=4000)
+            secciones_acumuladas += secciones
+            _job_escribir(job_id, {
+                "status": "running", "secciones": secciones_acumuladas,
+                "progreso": f"parte {i} de {len(partes)} lista", "error": None,
+            })
+
         _job_escribir(job_id, {
-            "status": "running", "secciones": secciones_1,
-            "progreso": "parte 1 de 2 lista", "error": None,
-        })
-
-        prompt_2 = datos_carta + INSTRUCCIONES_PARTE_2.format(
-            muerte_vacio=analisis.get('muerte_vacio', [])
-        ) + pautas
-        secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=4000)
-
-        _job_escribir(job_id, {
-            "status": "done", "secciones": secciones_1 + secciones_2,
+            "status": "done", "secciones": secciones_acumuladas,
             "progreso": "completo", "error": None,
         })
 
