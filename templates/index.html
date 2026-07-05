@@ -88,6 +88,7 @@ table.pilares td.row-lbl { text-align: left; font-size: 11px; color: var(--text3
 
 /* Informe */
 .informe-header { background: var(--accent); color: white; border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1rem; }
+.informe-logo { max-height: 40px; max-width: 160px; display: block; margin-bottom: 0.5rem; }
 .informe-brand { font-size: 11px; letter-spacing: 0.1em; color: #888780; margin-bottom: 0.75rem; }
 .informe-name { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
 .informe-sub { font-size: 13px; color: #B4B2A9; margin-bottom: 1.25rem; }
@@ -312,7 +313,8 @@ table.pilares td.row-lbl { text-align: left; font-size: 11px; color: var(--text3
   <div class="page" id="page3">
 
     <div class="informe-header" id="informe-header">
-      <div class="informe-brand">AZ-Consultoría · ASTROLOGÍA CHINA</div>
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AZ-Consultoría" class="informe-logo" onerror="this.style.display='none'">
+      <div class="informe-brand">AZ-CONSULTORÍA · ASTROLOGÍA CHINA</div>
       <div class="informe-name" id="inf-nombre">—</div>
       <div class="informe-sub" id="inf-sub">—</div>
       <div class="informe-meta" id="inf-meta"></div>
@@ -596,6 +598,7 @@ function actualizarExtras() {
 async function validarYContinuar() {
   actualizarExtras();
   const banner = document.getElementById('banner-gen');
+  const bannerTxt = banner.querySelector('span');
 
   try {
     // 1. Validar en backend
@@ -612,15 +615,27 @@ async function validarYContinuar() {
     renderInformeHeader();
     banner.style.display = 'flex';
 
-    // 2. Generar texto con IA
-    const gResp = await fetch('/generar-informe', { method: 'POST' });
-    const gData = await gResp.json();
-    if (!gData.ok) throw new Error(gData.error);
-    state.informe = gData.informe;
+    // 2. Generar informe en 2 partes (requests separados, cada uno corto)
+    if (bannerTxt) bannerTxt.textContent = 'Generando informe con IA (parte 1 de 2)...';
+    const r1 = await fetch('/generar-informe-1', { method: 'POST' });
+    const d1 = await r1.json();
+    if (!d1.ok) throw new Error(d1.error);
+
+    // Mostramos la primera mitad apenas está lista
+    state.informe = { secciones: d1.secciones };
+    renderSecciones(state.informe);
+
+    if (bannerTxt) bannerTxt.textContent = 'Generando informe con IA (parte 2 de 2)...';
+    const r2 = await fetch('/generar-informe-2', { method: 'POST' });
+    const d2 = await r2.json();
+    if (!d2.ok) throw new Error(d2.error);
+
+    state.informe = d2.informe;
     banner.style.display = 'none';
-    renderSecciones(gData.informe);
+    renderSecciones(state.informe);
 
   } catch (e) {
+    banner.style.display = 'none';
     alert('Error: ' + e.message);
   }
 }
