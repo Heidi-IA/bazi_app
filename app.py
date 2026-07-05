@@ -490,7 +490,7 @@ SECCIÓN 10 — Recomendaciones finales
 """
 
 
-def _llamar_claude_secciones(prompt, max_tokens=2000):
+def _llamar_claude_secciones(prompt, max_tokens=4000):
     """Llama a Claude y devuelve la lista de secciones (parseada de JSON)."""
     response = client.messages.create(
         model="claude-sonnet-4-6",
@@ -499,7 +499,16 @@ def _llamar_claude_secciones(prompt, max_tokens=2000):
     )
     raw = response.content[0].text.strip()
     raw = raw.replace("```json", "").replace("```", "").strip()
-    data = json.loads(raw)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        if response.stop_reason == "max_tokens":
+            raise Exception(
+                "La respuesta de Claude se cortó por el límite de tokens "
+                "antes de completar el JSON. Subí max_tokens en "
+                "_llamar_claude_secciones o dividí el prompt en partes más chicas."
+            ) from e
+        raise
     return data.get("secciones", [])
 
 
@@ -512,7 +521,7 @@ def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
 
         prompt_1 = datos_carta + INSTRUCCIONES_PARTE_1 + pautas
-        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=2000)
+        secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=4000)
         _job_escribir(job_id, {
             "status": "running", "secciones": secciones_1,
             "progreso": "parte 1 de 2 lista", "error": None,
@@ -521,7 +530,7 @@ def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e
         prompt_2 = datos_carta + INSTRUCCIONES_PARTE_2.format(
             muerte_vacio=analisis.get('muerte_vacio', [])
         ) + pautas
-        secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=2000)
+        secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=4000)
 
         _job_escribir(job_id, {
             "status": "done", "secciones": secciones_1 + secciones_2,
