@@ -477,9 +477,9 @@ SECCIÓN 07 — Salud
 
 INSTRUCCIONES_PARTE_D = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 4 de 4 (secciones 08 a 10)
+INSTRUCCIONES DEL INFORME — PARTE 4 de 5 (sección 08)
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 3 secciones, en este orden:
+Generá EXACTAMENTE esta sección:
 
 SECCIÓN 08 — Relaciones
 Incluir en este orden:
@@ -490,6 +490,13 @@ Incluir en este orden:
 5. Casamentero detectado: pares y pilares
 6. Pilares afines y muerte y vacío: animales de MV ({muerte_vacio}), en qué pilares aparecen y qué puede significar
 7. Si algún par es a la vez kármico y casamentero, mencionar la dualidad
+"""
+
+INSTRUCCIONES_PARTE_E = """
+═══════════════════════════════════
+INSTRUCCIONES DEL INFORME — PARTE 5 de 5 (secciones 09 a 10)
+═══════════════════════════════════
+Generá EXACTAMENTE estas 2 secciones, en este orden:
 
 SECCIÓN 09 — Pilares de la suerte
 Para cada ciclo decenal disponible:
@@ -541,6 +548,7 @@ def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e
             INSTRUCCIONES_PARTE_B,
             INSTRUCCIONES_PARTE_C,
             INSTRUCCIONES_PARTE_D.format(muerte_vacio=muerte_vacio),
+            INSTRUCCIONES_PARTE_E,
         ]
 
         secciones_acumuladas = []
