@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import threading
+import tempfile
 import anthropic
 from flask import Flask, render_template, request, jsonify, session
 from utils.bazi_rules import (
@@ -21,12 +22,44 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 # ============================================================
-# JOBS DE GENERACIÓN DE INFORME (en memoria, para este dyno)
+# JOBS DE GENERACIÓN DE INFORME (persistidos en disco)
 # ============================================================
-# Guardamos el progreso de cada generación de informe por job_id,
-# así el frontend puede hacer polling en vez de esperar una sola
-# request HTTP larga (que Heroku corta a los 30 segundos).
-informe_jobs = {}
+# Heroku puede atender cada request con un proceso worker distinto,
+# así que un diccionario en memoria de Python no alcanza: un worker
+# podría crear el job y otro (que no lo tiene en su memoria) atender
+# la consulta de estado, devolviendo 404. Guardamos cada job como un
+# archivo JSON en /tmp, que sí es visible para todos los workers del
+# mismo dyno.
+JOBS_DIR = os.path.join(tempfile.gettempdir(), "informe_jobs")
+os.makedirs(JOBS_DIR, exist_ok=True)
+
+
+def _job_path(job_id):
+    return os.path.join(JOBS_DIR, f"{job_id}.json")
+
+
+def _job_leer(job_id):
+    try:
+        with open(_job_path(job_id), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def _job_escribir(job_id, data):
+    # Escritura atómica: escribimos a un archivo temporal y renombramos,
+    # para evitar que otro proceso lea un JSON a medio escribir.
+    tmp_path = _job_path(job_id) + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+    os.replace(tmp_path, _job_path(job_id))
+
+
+def _job_borrar(job_id):
+    try:
+        os.remove(_job_path(job_id))
+    except FileNotFoundError:
+        pass
 
 # ============================================================
 # COMBINACIONES DE DIOSES POR PILAR
@@ -472,27 +505,34 @@ def _llamar_claude_secciones(prompt, max_tokens=2000):
 
 def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e, sexo):
     """Corre en un hilo aparte: llama a Claude dos veces y va actualizando
-    el progreso en informe_jobs para que el frontend pueda consultarlo."""
+    el progreso en disco para que el frontend pueda consultarlo, sin
+    importar qué worker de Heroku atienda cada request."""
     try:
         datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
 
         prompt_1 = datos_carta + INSTRUCCIONES_PARTE_1 + pautas
         secciones_1 = _llamar_claude_secciones(prompt_1, max_tokens=2000)
-        informe_jobs[job_id]["secciones"] = secciones_1
-        informe_jobs[job_id]["progreso"] = "parte 1 de 2 lista"
+        _job_escribir(job_id, {
+            "status": "running", "secciones": secciones_1,
+            "progreso": "parte 1 de 2 lista", "error": None,
+        })
 
         prompt_2 = datos_carta + INSTRUCCIONES_PARTE_2.format(
             muerte_vacio=analisis.get('muerte_vacio', [])
         ) + pautas
         secciones_2 = _llamar_claude_secciones(prompt_2, max_tokens=2000)
 
-        informe_jobs[job_id]["secciones"] = secciones_1 + secciones_2
-        informe_jobs[job_id]["status"] = "done"
+        _job_escribir(job_id, {
+            "status": "done", "secciones": secciones_1 + secciones_2,
+            "progreso": "completo", "error": None,
+        })
 
     except Exception as e:
-        informe_jobs[job_id]["status"] = "error"
-        informe_jobs[job_id]["error"] = str(e)
+        _job_escribir(job_id, {
+            "status": "error", "secciones": [],
+            "progreso": "", "error": str(e),
+        })
 
 
 @app.route("/generar-informe/iniciar", methods=["POST"])
@@ -505,7 +545,10 @@ def iniciar_informe():
     sexo     = usuario.get("sexo","mujer")
 
     job_id = str(uuid.uuid4())
-    informe_jobs[job_id] = {"status": "running", "secciones": [], "progreso": "iniciando", "error": None}
+    _job_escribir(job_id, {
+        "status": "running", "secciones": [],
+        "progreso": "iniciando", "error": None,
+    })
 
     hilo = threading.Thread(
         target=_generar_informe_en_background,
@@ -519,7 +562,7 @@ def iniciar_informe():
 
 @app.route("/generar-informe/estado/<job_id>", methods=["GET"])
 def estado_informe(job_id):
-    job = informe_jobs.get(job_id)
+    job = _job_leer(job_id)
     if not job:
         return jsonify({"ok": False, "error": "No se encontró ese trabajo de generación."}), 404
 
@@ -529,7 +572,7 @@ def estado_informe(job_id):
     informe = {"secciones": job["secciones"]}
     if job["status"] == "done":
         session["informe"] = informe
-        del informe_jobs[job_id]
+        _job_borrar(job_id)
 
     return jsonify({
         "ok": True,
@@ -537,8 +580,6 @@ def estado_informe(job_id):
         "progreso": job.get("progreso", ""),
         "informe": informe,
     })
-
-
 
 
 @app.route("/guardar-informe", methods=["POST"])
