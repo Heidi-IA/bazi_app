@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carta BAZI — AZ-Consultoría</title>
+<style>
+:root {
+  --bg: #FAFAF8; --bg2: #F4F3EF; --bg3: #ECEAE3;
+  --border: #E0DDD5; --border2: #C8C4BA;
+  --text: #1A1A18; --text2: #5C5A54; --text3: #9A9790;
+  --accent: #2C2C2A; --gold: #8B6914; --red: #C0392B;
+  --info-bg: #EEF4FF; --info-border: #C3D6F8; --info-text: #1A4BAA;
+  --warn-bg: #FAEEDA; --warn-border: #E8C97A; --warn-text: #633806;
+  --radius: 10px; --radius-sm: 6px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+.container { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); font-size: 14px; background: white; color: var(--text); outline: none; font-family: inherit; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+button { cursor: pointer; font-family: inherit; border-radius: var(--radius-sm); font-size: 14px; }
+.btn-primary { background: var(--accent); color: white; border: none; padding: 10px 20px; font-weight: 500; }
+.btn-primary:hover { background: #3a3a38; }
+.btn-secondary { background: white; color: var(--text); border: 1px solid var(--border2); padding: 9px 18px; }
+.btn-secondary:hover { background: var(--bg2); }
+.btn-ghost { background: none; border: none; color: var(--text2); padding: 6px 10px; font-size: 13px; }
+label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+
+/* Steps */
+.steps { display: flex; align-items: center; margin-bottom: 2rem; gap: 0; }
+.step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text3); }
+.step.active { color: var(--text); font-weight: 500; }
+.step.done { color: var(--gold); }
+.step-n { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; background: var(--bg); }
+.step.active .step-n { border-color: var(--accent); background: var(--accent); color: white; }
+.step.done .step-n { border-color: var(--gold); background: var(--gold); color: white; }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 10px; }
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.page-sub { font-size: 14px; color: var(--text2); margin-bottom: 1.5rem; }
+
+/* Cards */
+.card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-size: 12px; font-weight: 600; color: var(--text3); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 1rem; }
+.field { margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.err { font-size: 12px; color: var(--red); margin-top: 4px; display: none; }
+.err.show { display: block; }
+
+/* Upload */
+.upload-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 1.5rem; text-align: center; cursor: pointer; transition: background 0.15s; }
+.upload-zone:hover { background: var(--bg2); }
+.upload-zone p { font-size: 14px; color: var(--text2); margin-bottom: 4px; }
+.upload-zone small { font-size: 12px; color: var(--text3); }
+.upload-zone input[type=file] { display: none; }
+.preview-img { margin-top: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); overflow: hidden; position: relative; }
+.preview-img img { width: 100%; display: block; max-height: 160px; object-fit: cover; }
+.preview-img .rm { position: absolute; top: 6px; right: 6px; background: white; border: 1px solid var(--border2); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; }
+
+/* Pilares table */
+.pilares-wrap { overflow-x: auto; }
+table.pilares { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.pilares th { font-size: 11px; font-weight: 600; color: var(--text3); text-align: center; padding: 6px 8px; border-bottom: 1px solid var(--border); letter-spacing: 0.05em; }
+table.pilares th.left { text-align: left; }
+table.pilares td { text-align: center; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.pilares tr:last-child td { border-bottom: none; }
+table.pilares td.row-lbl { text-align: left; font-size: 11px; color: var(--text3); font-weight: 600; white-space: nowrap; }
+.pc { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pc-main { font-size: 14px; font-weight: 600; }
+.pc-sub { font-size: 11px; color: var(--text2); }
+.pc-god { font-size: 10px; background: var(--bg3); border-radius: 3px; padding: 1px 5px; color: var(--text3); font-weight: 600; }
+.badge-t { display: inline-block; font-size: 10px; background: var(--warn-bg); color: var(--warn-text); border-radius: 3px; padding: 1px 6px; margin-bottom: 3px; }
+
+/* Pilar extra */
+.pilar-extra-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.pilar-extra-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; position: relative; }
+.pilar-extra-item .rm-pilar { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; }
+.to-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.to-item { display: flex; gap: 6px; align-items: center; background: var(--bg2); border-radius: var(--radius-sm); padding: 4px 8px; }
+.to-item input { width: 80px; padding: 3px 6px; font-size: 12px; }
+
+/* Informe */
+.informe-header { background: var(--accent); color: white; border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1rem; }
+.informe-logo { max-height: 40px; max-width: 160px; display: block; margin-bottom: 0.5rem; }
+.informe-brand { font-size: 11px; letter-spacing: 0.1em; color: #888780; margin-bottom: 0.75rem; }
+.informe-name { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.informe-sub { font-size: 13px; color: #B4B2A9; margin-bottom: 1.25rem; }
+.informe-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.meta-box { background: rgba(255,255,255,0.07); border-radius: 6px; padding: 10px 12px; }
+.meta-lbl { font-size: 10px; color: #888780; letter-spacing: 0.06em; margin-bottom: 3px; }
+.meta-val { font-size: 13px; color: white; font-weight: 500; }
+
+.seccion { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1rem; overflow: hidden; }
+.sec-head { padding: 1rem 1.25rem; background: white; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.sec-num { font-size: 11px; font-weight: 600; color: var(--text3); min-width: 20px; }
+.sec-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: var(--text2); background: var(--bg3); border-radius: 4px; padding: 2px 8px; flex-shrink: 0; }
+.sec-title { font-size: 15px; font-weight: 600; flex: 1; }
+.sec-body { padding: 0 1.25rem 1.25rem; background: white; border-top: 1px solid var(--border); }
+.sec-body textarea { margin-top: 1rem; }
+.edit-hint { font-size: 12px; color: var(--text3); margin-top: 6px; font-style: italic; }
+
+/* Elementos */
+.elem-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+.elem-card { border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; border: 1px solid var(--border); background: var(--bg2); }
+.elem-pct { font-size: 18px; font-weight: 700; }
+.elem-name { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.elem-rep { font-size: 10px; color: var(--text3); margin-top: 2px; font-style: italic; }
+.elem-bar { height: 3px; border-radius: 2px; margin-top: 6px; }
+
+/* Interacciones */
+.int-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 4px; padding: 2px 8px; margin-bottom: 6px; }
+.badge-comb { background: #E8F5E9; color: #2E7D32; }
+.badge-choque { background: #FFEBEE; color: #C62828; }
+.badge-daño { background: #FFF3E0; color: #E65100; }
+.badge-dest { background: #F3E5F5; color: #6A1B9A; }
+.badge-cast { background: #FFF8E1; color: #F57F17; }
+.int-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.int-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.int-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.int-pilar { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* Action bar */
+.action-bar { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+.action-note { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.action-btns { display: flex; gap: 8px; }
+
+/* Banner */
+.banner { border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.banner-info { background: var(--info-bg); border: 1px solid var(--info-border); color: var(--info-text); }
+.banner-warn { background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text); }
+.spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; opacity: 0.6; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Analyzing overlay */
+#analyzing { display: none; }
+#analyzing.show { display: flex; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- INDICADOR DE PASOS -->
+  <div class="steps" id="steps">
+    <div class="step active" id="step1"><div class="step-n" id="sn1">1</div><span>Datos personales</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="step2"><div class="step-n" id="sn2">2</div><span>Carta BAZI</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="step3"><div class="step-n" id="sn3">3</div><span>Informe</span></div>
+  </div>
+
+  <!-- ======================================================
+       PÁGINA 1 — DATOS PERSONALES
+  ====================================================== -->
+  <div class="page active" id="page1">
+    <div class="page-title">Datos del consultante</div>
+    <div class="page-sub">Completá los datos antes de cargar la carta BAZI.</div>
+
+    <div class="card">
+      <div class="card-title">Información personal</div>
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="f-nombre" placeholder="Ej: María González">
+        <div class="err" id="e-nombre">Campo requerido</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Fecha de nacimiento</label>
+          <input type="date" id="f-fecha">
+          <div class="err" id="e-fecha">Campo requerido</div>
+        </div>
+        <div class="field">
+          <label>Hora de nacimiento</label>
+          <input type="time" id="f-hora">
+          <div class="err" id="e-hora">Campo requerido</div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Sexo</label>
+          <select id="f-sexo">
+            <option value="">Seleccionar...</option>
+            <option value="hombre">Hombre</option>
+            <option value="mujer">Mujer</option>
+          </select>
+          <div class="err" id="e-sexo">Campo requerido</div>
+        </div>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" id="f-email" placeholder="consultante@email.com">
+          <div class="err" id="e-email">Email inválido</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" style="width:100%" onclick="paso1()">Continuar →</button>
+  </div>
+
+  <!-- ======================================================
+       PÁGINA 2 — CARTA BAZI
+  ====================================================== -->
+  <div class="page" id="page2">
+    <div class="page-title">Carta BAZI</div>
+    <div class="page-sub">Subí las imágenes o revisá los datos extraídos. Podés agregar pilares adicionales.</div>
+
+    <!-- Subir imágenes -->
+    <div class="card" id="card-upload">
+      <div class="card-title">Cargar imágenes</div>
+      <div class="field">
+        <label>Imagen 1 — Tabla de pilares (obligatorio)</label>
+        <div class="upload-zone" onclick="document.getElementById('file1').click()">
+          <p>📊 Tabla de los 4 pilares + carta móvil</p>
+          <small>Hora, Día, Mes, Año, Pilar de Suerte, Año en Curso</small>
+          <input type="file" id="file1" accept="image/*" onchange="handleImg(this,1)">
+        </div>
+        <div id="prev1"></div>
+      </div>
+      <div class="field">
+        <label>Imagen 2 — Los 5 elementos (obligatorio)</label>
+        <div class="upload-zone" onclick="document.getElementById('file2').click()">
+          <p>🍃 Gráfico de 5 elementos con porcentajes</p>
+          <small>Incluye qué representa cada elemento en esta carta</small>
+          <input type="file" id="file2" accept="image/*" onchange="handleImg(this,2)">
+        </div>
+        <div id="prev2"></div>
+      </div>
+      <div class="field">
+        <label>Imagen 3 — Pilares de la suerte (opcional)</label>
+        <div class="upload-zone" onclick="document.getElementById('file3').click()">
+          <p>📅 Tabla de ciclos decenales</p>
+          <small>Opcional</small>
+          <input type="file" id="file3" accept="image/*" onchange="handleImg(this,3)">
+        </div>
+        <div id="prev3"></div>
+      </div>
+      <div class="banner banner-info" id="banner-extract" style="display:none">
+        <div class="spinner"></div>
+        <span id="extract-txt">Analizando imágenes con IA...</span>
+      </div>
+      <button class="btn-primary" id="btn-extract" style="width:100%;margin-top:12px;display:none" onclick="extraerDatos()">
+        Extraer datos de las imágenes →
+      </button>
+    </div>
+
+    <!-- Pilares extraídos -->
+    <div class="card" id="card-pilares" style="display:none">
+      <div class="card-title">Carta fija — 4 pilares</div>
+      <div class="pilares-wrap">
+        <table class="pilares" id="tabla-fija">
+          <thead><tr>
+            <th class="left"></th>
+            <th>Hora<br><small style="font-weight:400;color:var(--text3)">+60 años</small></th>
+            <th>Día<br><small style="font-weight:400;color:var(--text3)">40–60</small></th>
+            <th>Mes<br><small style="font-weight:400;color:var(--text3)">20–40</small></th>
+            <th>Año<br><small style="font-weight:400;color:var(--text3)">0–20</small></th>
+          </tr></thead>
+          <tbody id="tbody-fija"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="card-movil" style="display:none">
+      <div class="card-title">Carta móvil — pilares transitorios</div>
+      <div class="pilares-wrap">
+        <table class="pilares" id="tabla-movil">
+          <thead><tr>
+            <th class="left"></th>
+            <th><span class="badge-t">transitorio</span><br>Pilar de suerte</th>
+            <th><span class="badge-t">transitorio</span><br>Año en curso</th>
+          </tr></thead>
+          <tbody id="tbody-movil"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5 elementos -->
+    <div class="card" id="card-elem" style="display:none">
+      <div class="card-title">Los 5 elementos</div>
+      <div class="elem-grid" id="elem-grid"></div>
+    </div>
+
+    <!-- Pilares adicionales manuales -->
+    <div class="card" id="card-extra" style="display:none">
+      <div class="card-title">Pilares adicionales (opcional)</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px">
+        Agregá pilares extra: año 2027, pilar de concepción, pilar de la mente, etc.
+      </p>
+      <div class="pilar-extra-list" id="extra-list"></div>
+      <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="agregarPilarExtra()">
+        + Agregar pilar adicional
+      </button>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px" id="nav2" style="display:none">
+      <button class="btn-secondary" onclick="goPage(1)">← Volver</button>
+      <button class="btn-primary" style="flex:1" id="btn-validar" onclick="validarYContinuar()">
+        Validar y generar informe →
+      </button>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn-secondary" onclick="goPage(1)" style="width:100%">← Volver a datos personales</button>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       PÁGINA 3 — INFORME
+  ====================================================== -->
+  <div class="page" id="page3">
+
+    <div class="informe-header" id="informe-header">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="AZ-Consultoría" class="informe-logo" onerror="this.style.display='none'">
+      <div class="informe-brand">AZ-CONSULTORÍA · ASTROLOGÍA CHINA</div>
+      <div class="informe-name" id="inf-nombre">—</div>
+      <div class="informe-sub" id="inf-sub">—</div>
+      <div class="informe-meta" id="inf-meta"></div>
+    </div>
+
+    <div class="action-bar">
+      <div class="action-note">✏️ Borrador generado por IA · editá cada sección antes de exportar</div>
+      <div class="action-btns">
+        <button class="btn-secondary" onclick="enviarEmail()">✉️ Enviar por email</button>
+        <button class="btn-primary" onclick="exportarPDF()">⬇ Exportar PDF</button>
+      </div>
+    </div>
+
+    <div class="banner banner-info" id="banner-gen" style="display:none">
+      <div class="spinner"></div>
+      <span>Generando informe con IA...</span>
+    </div>
+
+    <div id="secciones-container"></div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <button class="btn-ghost" onclick="goPage(2)">← Volver a la carta</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+let state = {
+  usuario: {},
+  imgFiles: {},
+  cartaData: null,
+  pilares_extra: [],
+  analisis: null,
+  informe: null,
+};
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+function goPage(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + n).classList.add('active');
+  for (let i = 1; i <= 3; i++) {
+    const s = document.getElementById('step' + i);
+    const sn = document.getElementById('sn' + i);
+    s.classList.remove('active', 'done');
+    if (i < n) { s.classList.add('done'); sn.textContent = '✓'; }
+    else if (i === n) { s.classList.add('active'); sn.textContent = i; }
+    else { sn.textContent = i; }
+  }
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// PASO 1 — VALIDAR Y GUARDAR DATOS
+// ============================================================
+function paso1() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const fecha  = document.getElementById('f-fecha').value;
+  const hora   = document.getElementById('f-hora').value;
+  const sexo   = document.getElementById('f-sexo').value;
+  const email  = document.getElementById('f-email').value.trim();
+  let ok = true;
+
+  const show = (id, v) => document.getElementById(id).classList.toggle('show', !v);
+  show('e-nombre', nombre); if (!nombre) ok = false;
+  show('e-fecha',  fecha);  if (!fecha)  ok = false;
+  show('e-hora',   hora);   if (!hora)   ok = false;
+  show('e-sexo',   sexo);   if (!sexo)   ok = false;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  show('e-email', emailOk); if (!emailOk) ok = false;
+  if (!ok) return;
+
+  state.usuario = { nombre, fecha, hora, sexo, email };
+  fetch('/carta', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(state.usuario) });
+  goPage(2);
+}
+
+// ============================================================
+// PASO 2 — IMÁGENES
+// ============================================================
+function handleImg(input, n) {
+  const file = input.files[0];
+  if (!file) return;
+  state.imgFiles[n] = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const el = document.getElementById('prev' + n);
+    el.innerHTML = `<div class="preview-img"><img src="${e.target.result}"><button class="rm" onclick="rmImg(${n})">✕</button></div>`;
+    checkExtract();
+  };
+  reader.readAsDataURL(file);
+}
+
+function rmImg(n) {
+  delete state.imgFiles[n];
+  document.getElementById('prev' + n).innerHTML = '';
+  checkExtract();
+}
+
+function checkExtract() {
+  const ready = state.imgFiles[1] && state.imgFiles[2];
+  document.getElementById('btn-extract').style.display = ready ? 'block' : 'none';
+}
+
+async function fileToB64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function extraerDatos() {
+  const banner = document.getElementById('banner-extract');
+  const txt = document.getElementById('extract-txt');
+  banner.style.display = 'flex';
+  document.getElementById('btn-extract').style.display = 'none';
+
+  try {
+    const imagenes = [];
+    for (const [k, file] of Object.entries(state.imgFiles)) {
+      imagenes.push({ data: await fileToB64(file), media_type: file.type });
+    }
+    const resp = await fetch('/extraer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imagenes })
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error);
+    state.cartaData = data.data;
+    renderPilares(data.data);
+    banner.style.display = 'none';
+  } catch (e) {
+    txt.textContent = 'Error al analizar: ' + e.message;
+    document.getElementById('btn-extract').style.display = 'block';
+  }
+}
+
+function renderPilares(d) {
+  const cf = d.carta_fija || {};
+  const cols = ['hora', 'dia', 'mes', 'anio'];
+  const rows = [
+    { key: 'tronco', lbl: 'Tronco',
+      r: p => p ? `<div class="pc"><span class="pc-main">${p.nombre||'—'}</span><span class="pc-sub">${p.elemento||''} ${p.polaridad||''}</span>${p.dios?`<span class="pc-god">${p.dios}</span>`:''}</div>` : '—' },
+    { key: 'rama', lbl: 'Rama',
+      r: p => p ? `<div class="pc"><span class="pc-main">${p.nombre||'—'}</span><span class="pc-sub">${p.elemento||''} ${p.polaridad||''}</span></div>` : '—' },
+    { key: 'troncos_ocultos', lbl: 'T. ocultos',
+      r: arr => `<div class="pc">${(arr||[]).map(t=>`<span class="pc-sub">${t.nombre||''} <span class="pc-god">${t.dios||''}</span></span>`).join('')}</div>` },
+  ];
+
+  const tbodyF = document.getElementById('tbody-fija');
+  tbodyF.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="row-lbl">${row.lbl}</td>` +
+      cols.map(c => `<td>${row.r(cf[c] ? cf[c][row.key] : null)}</td>`).join('');
+    tbodyF.appendChild(tr);
+  });
+
+  const cm = d.carta_movil || {};
+  const tbodyM = document.getElementById('tbody-movil');
+  tbodyM.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="row-lbl">${row.lbl}</td>` +
+      `<td>${row.r(cm.pilar_suerte ? cm.pilar_suerte[row.key] : null)}</td>` +
+      `<td>${row.r(cm.anio_curso ? cm.anio_curso[row.key] : null)}</td>`;
+    tbodyM.appendChild(tr);
+  });
+
+  // 5 elementos
+  const el = d.cinco_elementos || {};
+  const colors = { fuego:'#D85A30', tierra:'#BA7517', metal:'#888780', agua:'#378ADD', madera:'#639922' };
+  document.getElementById('elem-grid').innerHTML = Object.entries(el).map(([k,v]) =>
+    `<div class="elem-card">
+      <div class="elem-pct" style="color:${colors[k]||'var(--text)'}">${v.porcentaje||0}%</div>
+      <div class="elem-name">${k.charAt(0).toUpperCase()+k.slice(1)}</div>
+      <div class="elem-rep">${v.representa||''}</div>
+      <div class="elem-bar" style="background:${colors[k]||'#ccc'};width:${Math.min(v.porcentaje||0,100)}%"></div>
+    </div>`).join('');
+
+  ['card-pilares','card-movil','card-elem','card-extra','nav2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
+  document.getElementById('btn-validar').style.display = 'block';
+}
+
+// ============================================================
+// PILARES ADICIONALES MANUALES
+// ============================================================
+let extraCount = 0;
+function agregarPilarExtra() {
+  extraCount++;
+  const id = `extra-${extraCount}`;
+  const div = document.createElement('div');
+  div.className = 'pilar-extra-item';
+  div.id = id;
+  div.innerHTML = `
+    <button class="rm-pilar" onclick="document.getElementById('${id}').remove(); actualizarExtras()">✕</button>
+    <div class="field">
+      <label>Nombre del pilar</label>
+      <input type="text" placeholder="Ej: Pilar de concepción, Año 2027..." class="ep-nombre" onchange="actualizarExtras()">
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>Tronco</label>
+        <input type="text" placeholder="Ej: Bing" class="ep-tronco" onchange="actualizarExtras()">
+      </div>
+      <div class="field">
+        <label>Elemento</label>
+        <select class="ep-elem" onchange="actualizarExtras()">
+          <option value="">—</option>
+          <option>fuego</option><option>tierra</option><option>metal</option><option>agua</option><option>madera</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Polaridad</label>
+        <select class="ep-pol" onchange="actualizarExtras()">
+          <option value="">—</option>
+          <option>yang</option><option>yin</option>
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Dios del tronco</label>
+        <select class="ep-dios-t" onchange="actualizarExtras()">
+          <option value="">—</option>
+          <option>RD</option><option>RI</option><option>OH</option><option>A</option><option>RR</option>
+          <option>DI</option><option>DD</option><option>OD</option><option>7M</option><option>DC</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Rama (animal)</label>
+        <input type="text" placeholder="Ej: Caballo" class="ep-rama" onchange="actualizarExtras()">
+      </div>
+    </div>
+    <div class="field">
+      <label>Troncos ocultos (nombre + dios, uno por línea: "Ding RI")</label>
+      <textarea class="ep-to" placeholder="Ding RI&#10;Ji A" rows="3" onchange="actualizarExtras()"></textarea>
+    </div>`;
+  document.getElementById('extra-list').appendChild(div);
+}
+
+function actualizarExtras() {
+  state.pilares_extra = [];
+  document.querySelectorAll('.pilar-extra-item').forEach(div => {
+    const nombre = div.querySelector('.ep-nombre').value.trim();
+    if (!nombre) return;
+    const toRaw = div.querySelector('.ep-to').value.trim();
+    const troncos_ocultos = toRaw ? toRaw.split('\n').map(l => {
+      const parts = l.trim().split(' ');
+      return { nombre: parts[0]||'', dios: parts[1]||'' };
+    }) : [];
+    state.pilares_extra.push({
+      nombre,
+      tipo: 'adicional',
+      tronco: {
+        nombre: div.querySelector('.ep-tronco').value.trim(),
+        elemento: div.querySelector('.ep-elem').value,
+        polaridad: div.querySelector('.ep-pol').value,
+        dios: div.querySelector('.ep-dios-t').value,
+      },
+      rama: { nombre: div.querySelector('.ep-rama').value.trim() },
+      troncos_ocultos,
+    });
+  });
+}
+
+// ============================================================
+// VALIDAR Y GENERAR INFORME
+// ============================================================
+async function validarYContinuar() {
+  actualizarExtras();
+  const banner = document.getElementById('banner-gen');
+  const bannerTxt = banner.querySelector('span');
+
+  try {
+    // 1. Validar en backend
+    const vResp = await fetch('/validar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ carta: state.cartaData, pilares_adicionales: state.pilares_extra })
+    });
+    const vData = await vResp.json();
+    if (!vData.ok) throw new Error(vData.error);
+    state.analisis = vData.analisis;
+
+    goPage(3);
+    renderInformeHeader();
+    banner.style.display = 'flex';
+    if (bannerTxt) bannerTxt.textContent = 'Generando informe con IA...';
+
+    // 2. Iniciar la generación en background (no espera a que termine)
+    const iResp = await fetch('/generar-informe/iniciar', { method: 'POST' });
+    const iData = await iResp.json();
+    if (!iData.ok) throw new Error(iData.error);
+    const jobId = iData.job_id;
+
+    // 3. Consultar el progreso cada 3 segundos hasta que esté listo
+    await pollInforme(jobId, bannerTxt);
+    banner.style.display = 'none';
+
+  } catch (e) {
+    banner.style.display = 'none';
+    alert('Error: ' + e.message);
+  }
+}
+
+function pollInforme(jobId, bannerTxt) {
+  return new Promise((resolve, reject) => {
+    const intervalo = setInterval(async () => {
+      try {
+        const resp = await fetch(`/generar-informe/estado/${jobId}`);
+        const data = await resp.json();
+        if (!data.ok) {
+          clearInterval(intervalo);
+          reject(new Error(data.error || 'Error generando el informe'));
+          return;
+        }
+
+        // Mostramos las secciones a medida que van llegando
+        if (data.informe && data.informe.secciones && data.informe.secciones.length) {
+          state.informe = data.informe;
+          renderSecciones(data.informe);
+        }
+        if (bannerTxt && data.progreso) {
+          bannerTxt.textContent = 'Generando informe con IA — ' + data.progreso + '...';
+        }
+
+        if (data.status === 'done') {
+          clearInterval(intervalo);
+          resolve();
+        }
+      } catch (err) {
+        clearInterval(intervalo);
+        reject(err);
+      }
+    }, 3000);
+  });
+}
+
+// ============================================================
+// RENDER INFORME
+// ============================================================
+const SEC_TAGS = {
+  '01': 'día maestro',   '02': 'carta fija',      '03': 'carta móvil',
+  '04': '5 elementos',   '05': 'combinaciones',   '06': 'conflictos',
+  '07': 'salud',         '08': 'relaciones',      '09': 'ciclos decenales',
+  '10': 'recomendaciones'
+};
+
+function renderInformeHeader() {
+  const u = state.usuario;
+  document.getElementById('inf-nombre').textContent = u.nombre || '—';
+  document.getElementById('inf-sub').textContent =
+    `${u.fecha||''} · ${u.hora||''} · ${u.sexo||''}`;
+
+  const dm = state.cartaData?.dia_maestro || {};
+  const el = state.cartaData?.cinco_elementos || {};
+  const dom = Object.entries(el).sort((a,b)=>(b[1].porcentaje||0)-(a[1].porcentaje||0))[0];
+  document.getElementById('inf-meta').innerHTML = `
+    <div class="meta-box"><div class="meta-lbl">DÍA MAESTRO</div><div class="meta-val">${dm.nombre||'—'} — ${dm.elemento||''} ${dm.polaridad||''}</div></div>
+    <div class="meta-box"><div class="meta-lbl">ELEMENTO DOMINANTE</div><div class="meta-val">${dom ? dom[0].charAt(0).toUpperCase()+dom[0].slice(1)+' '+dom[1].porcentaje+'%' : '—'}</div></div>
+    <div class="meta-box"><div class="meta-lbl">ESTRELLA DE VIDA (GUA)</div><div class="meta-val">${dm.estrella_vida||'—'}</div></div>`;
+}
+
+function renderSecciones(informe) {
+  const cont = document.getElementById('secciones-container');
+  cont.innerHTML = '';
+  (informe.secciones || []).forEach((sec, i) => {
+    const div = document.createElement('div');
+    div.className = 'seccion';
+    div.innerHTML = `
+      <div class="sec-head">
+        <span class="sec-num">${sec.numero}</span>
+        <span class="sec-tag">${SEC_TAGS[sec.numero] || ''}</span>
+        <span class="sec-title">${sec.titulo}</span>
+      </div>
+      <div class="sec-body">
+        <textarea id="sec-txt-${i}" onchange="guardarSeccion(${i}, this.value)">${sec.texto||''}</textarea>
+        <div class="edit-hint">✏️ Editá este texto antes de exportar</div>
+      </div>`;
+    cont.appendChild(div);
+  });
+}
+
+function guardarSeccion(i, texto) {
+  if (state.informe?.secciones?.[i]) {
+    state.informe.secciones[i].texto = texto;
+    fetch('/guardar-informe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ informe: state.informe })
+    });
+  }
+}
+
+// ============================================================
+// EXPORT
+// ============================================================
+function exportarPDF() {
+  // Ahora es una descarga real (GET que devuelve el PDF), no una respuesta JSON.
+  // Abrimos en una pestaña nueva: si hay un error, se muestra ahí sin
+  // romper la SPA; si es un PDF, el navegador dispara la descarga solo.
+  window.open('/exportar-pdf', '_blank');
+}
+
+function enviarEmail() {
+  fetch('/enviar-email', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { if (!d.ok) alert('Email próximamente disponible.'); });
+}
+</script>
+</body>
+</html>
