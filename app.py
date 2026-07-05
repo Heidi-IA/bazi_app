@@ -408,20 +408,22 @@ PAUTAS GENERALES
 }}
 """
 
-INSTRUCCIONES_PARTE_A = """
+INSTRUCCIONES_SECCION_01 = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 1 de 4 (secciones 01 a 02)
+INSTRUCCIONES — SECCIÓN 01: El día maestro
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 2 secciones, en este orden:
-
-SECCIÓN 01 — El día maestro
-Incluir:
+Generá EXACTAMENTE 1 sección (numero "01", titulo "El día maestro"):
 - Descripción del día maestro (elemento, polaridad, personalidad según dm_info)
 - Armonía de género con su implicancia práctica
 - Resumen del balance Yin/Yang
 - Cesta de elementos: para cada elemento indicar cantidad, descripción del nivel y recomendación de recarga si corresponde
+"""
 
-SECCIÓN 02 — Análisis de los 4 pilares (carta fija)
+INSTRUCCIONES_SECCION_02 = """
+═══════════════════════════════════
+INSTRUCCIONES — SECCIÓN 02: Análisis de los 4 pilares (carta fija)
+═══════════════════════════════════
+Generá EXACTAMENTE 1 sección (numero "02", titulo "Análisis de los 4 pilares"):
 Para cada pilar (Año, Mes, Día, Hora):
 - Indicar edad y ámbito
 - Analizar tronco (dios y lo que representa), rama (animal y energía emocional), troncos ocultos (inconsciente)
@@ -430,59 +432,66 @@ Para cada pilar (Año, Mes, Día, Hora):
 - Un párrafo fluido por pilar
 """
 
-INSTRUCCIONES_PARTE_B = """
+INSTRUCCIONES_SECCION_03 = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 2 de 4 (secciones 03 a 05)
+INSTRUCCIONES — SECCIÓN 03: Carta móvil (pilares transitorios)
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 3 secciones, en este orden:
-
-SECCIÓN 03 — Carta móvil (pilares transitorios)
+Generá EXACTAMENTE 1 sección (numero "03", titulo "Carta móvil"):
 - Analizar pilar de suerte y año en curso
 - Aclarar SIEMPRE que son transitorios
 - Incluir descripción específica animal+elemento si existe
+"""
 
-SECCIÓN 04 — Los 5 elementos — balance y finanzas
-Incluir en este orden:
+INSTRUCCIONES_SECCION_04 = """
+═══════════════════════════════════
+INSTRUCCIONES — SECCIÓN 04: Los 5 elementos — balance y finanzas
+═══════════════════════════════════
+Generá EXACTAMENTE 1 sección (numero "04", titulo "Los 5 elementos — balance y finanzas"):
 1. Tabla/descripción de cada elemento: porcentaje, qué representa en esta carta, estado (exceso/equilibrio/carencia)
 2. Descripción del exceso y carencia con sus implicancias
 3. Superpoder financiero
 4. Qué te impide avanzar financieramente (bloqueos por dioses ausentes)
 5. Recomendaciones de equilibrio
+"""
 
-SECCIÓN 05 — Combinaciones
+INSTRUCCIONES_SECCION_05 = """
+═══════════════════════════════════
+INSTRUCCIONES — SECCIÓN 05: Combinaciones
+═══════════════════════════════════
+Generá EXACTAMENTE 1 sección (numero "05", titulo "Combinaciones"):
 - SOLO combinaciones positivas (troncos y ramas)
 - Indicar tipo (direccional/estacional/elemental), animales, pilares involucrados, elemento que genera
 - Si no hay combinaciones, mencionarlo y explicar qué significa energéticamente
 """
 
-INSTRUCCIONES_PARTE_C = """
+INSTRUCCIONES_SECCION_06 = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 3 de 4 (secciones 06 a 07)
+INSTRUCCIONES — SECCIÓN 06: Conflictos
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 2 secciones, en este orden:
-
-SECCIÓN 06 — Conflictos
+Generá EXACTAMENTE 1 sección (numero "06", titulo "Conflictos"):
 Separar en dos bloques:
 BLOQUE A — Conflictos de ramas (choques, daños, destrucciones, castigos):
 - Para cada uno: tipo, animales, pilares, efecto, aspecto psicológico si existe, personas involucradas según sexo
 BLOQUE B — Conflictos de troncos:
 - Para cada uno: descripción, efecto, pilares, ámbito, personas involucradas
-- Sección 06: separar CLARAMENTE combinaciones de conflictos
+- Separar CLARAMENTE combinaciones de conflictos
+"""
 
-SECCIÓN 07 — Salud
+INSTRUCCIONES_SECCION_07 = """
+═══════════════════════════════════
+INSTRUCCIONES — SECCIÓN 07: Salud
+═══════════════════════════════════
+Generá EXACTAMENTE 1 sección (numero "07", titulo "Salud"):
 - Elementos en exceso y carencia con órganos afectados y emoción negativa asociada
 - Conflictos detectados y su impacto en salud (por dioses involucrados)
 - Combinaciones especiales de salud si existen
 """
 
-INSTRUCCIONES_PARTE_D = """
+INSTRUCCIONES_SECCION_08 = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 4 de 5 (sección 08)
+INSTRUCCIONES — SECCIÓN 08: Relaciones
 ═══════════════════════════════════
-Generá EXACTAMENTE esta sección:
-
-SECCIÓN 08 — Relaciones
-Incluir en este orden:
+Generá EXACTAMENTE 1 sección (numero "08", titulo "Relaciones"):
 1. Cámara roja: animal, si aparece en algún pilar de la carta
 2. Flor de melocotón: animal, elemento, razón de atracción
 3. Hombre/Mujer noble: animales y cuándo se activan
@@ -492,24 +501,26 @@ Incluir en este orden:
 7. Si algún par es a la vez kármico y casamentero, mencionar la dualidad
 """
 
-INSTRUCCIONES_PARTE_E = """
+INSTRUCCIONES_SECCION_09 = """
 ═══════════════════════════════════
-INSTRUCCIONES DEL INFORME — PARTE 5 de 5 (secciones 09 a 10)
+INSTRUCCIONES — SECCIÓN 09: Pilares de la suerte
 ═══════════════════════════════════
-Generá EXACTAMENTE estas 2 secciones, en este orden:
-
-SECCIÓN 09 — Pilares de la suerte
+Generá EXACTAMENTE 1 sección (numero "09", titulo "Pilares de la suerte"):
 Para cada ciclo decenal disponible:
 - Período, tronco con dios, rama con animal
 - Descripción específica animal+elemento del pilar de suerte
 - Qué energía activa ese ciclo y qué puede esperarse
+"""
 
-SECCIÓN 10 — Recomendaciones finales
+INSTRUCCIONES_SECCION_10 = """
+═══════════════════════════════════
+INSTRUCCIONES — SECCIÓN 10: Recomendaciones finales
+═══════════════════════════════════
+Generá EXACTAMENTE 1 sección (numero "10", titulo "Recomendaciones finales"):
 - Mínimo 6 recomendaciones concretas y prácticas
 - Basadas en todo el análisis anterior
 - Tono cálido, orientado al crecimiento personal
 """
-
 
 
 def _llamar_claude_secciones(prompt, max_tokens=4000):
@@ -535,30 +546,37 @@ def _llamar_claude_secciones(prompt, max_tokens=4000):
 
 
 def _generar_informe_en_background(job_id, usuario, analisis, carta, dm, cinco_e, sexo):
-    """Corre en un hilo aparte: llama a Claude 4 veces (partes más chicas,
-    menos riesgo de que se corte por límite de tokens) y va actualizando
-    el progreso en disco para que el frontend pueda consultarlo."""
+    """Corre en un hilo aparte: llama a Claude una vez por cada una de las
+    10 secciones (lo más chico posible, mínimo riesgo de corte por límite
+    de tokens) y va actualizando el progreso en disco para que el
+    frontend pueda consultarlo."""
     try:
         datos_carta = _construir_datos_carta(usuario, analisis, carta, dm, cinco_e, sexo)
         pautas = PAUTAS_GENERALES.format(sexo=sexo)
         muerte_vacio = analisis.get('muerte_vacio', [])
 
-        partes = [
-            INSTRUCCIONES_PARTE_A,
-            INSTRUCCIONES_PARTE_B,
-            INSTRUCCIONES_PARTE_C,
-            INSTRUCCIONES_PARTE_D.format(muerte_vacio=muerte_vacio),
-            INSTRUCCIONES_PARTE_E,
+        secciones_instrucciones = [
+            INSTRUCCIONES_SECCION_01,
+            INSTRUCCIONES_SECCION_02,
+            INSTRUCCIONES_SECCION_03,
+            INSTRUCCIONES_SECCION_04,
+            INSTRUCCIONES_SECCION_05,
+            INSTRUCCIONES_SECCION_06,
+            INSTRUCCIONES_SECCION_07,
+            INSTRUCCIONES_SECCION_08.format(muerte_vacio=muerte_vacio),
+            INSTRUCCIONES_SECCION_09,
+            INSTRUCCIONES_SECCION_10,
         ]
 
         secciones_acumuladas = []
-        for i, instrucciones in enumerate(partes, start=1):
+        total = len(secciones_instrucciones)
+        for i, instrucciones in enumerate(secciones_instrucciones, start=1):
             prompt = datos_carta + instrucciones + pautas
-            secciones = _llamar_claude_secciones(prompt, max_tokens=4000)
+            secciones = _llamar_claude_secciones(prompt, max_tokens=2500)
             secciones_acumuladas += secciones
             _job_escribir(job_id, {
                 "status": "running", "secciones": secciones_acumuladas,
-                "progreso": f"parte {i} de {len(partes)} lista", "error": None,
+                "progreso": f"sección {i} de {total} lista", "error": None,
             })
 
         _job_escribir(job_id, {
