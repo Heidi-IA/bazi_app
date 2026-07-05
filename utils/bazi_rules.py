@@ -416,7 +416,11 @@ RELACIONES_KARMICAS = [
 ]
 
 # ------------------------------------------------------------
-# CASAMENTERO - pares de relaciones duraderas
+# CASAMENTERO - estrella de matrimonio/uniones duraderas
+# Al igual que la Cámara Roja, el Casamentero se determina a partir
+# de la RAMA del Día Maestro (no de pares buscados en cualquier
+# combinación de pilares). Cada animal tiene un único "casamentero"
+# fijo, según los 6 pares de Armonía (Liu He).
 # ------------------------------------------------------------
 CASAMENTERO = [
     {"animales": ["Rata",     "Conejo"],    "es_tambien_karmico": True},
@@ -427,47 +431,76 @@ CASAMENTERO = [
     {"animales": ["Tigre",    "Buey"],      "es_tambien_karmico": False},
 ]
 
+# Mapa bidireccional animal del día maestro → animal casamentero
+CASAMENTERO_POR_RAMA = {}
+for _par in CASAMENTERO:
+    _a1, _a2 = _par["animales"]
+    CASAMENTERO_POR_RAMA[_a1] = {"animal": _a2, "es_tambien_karmico": _par["es_tambien_karmico"]}
+    CASAMENTERO_POR_RAMA[_a2] = {"animal": _a1, "es_tambien_karmico": _par["es_tambien_karmico"]}
+
 # ------------------------------------------------------------
 # MUERTE Y VACÍO - por columna de 60 pilares
 # ------------------------------------------------------------
 MUERTE_VACIO = {
-    # Col 1: Jia Yin
-    "Jia Yin":  ["Perro","Cerdo"], "Yi Mao":   ["Perro","Cerdo"],
-    "Bing Chen":["Perro","Cerdo"], "Ding Si":  ["Perro","Cerdo"],
-    "Wu Wu":    ["Perro","Cerdo"], "Ji Wei":   ["Perro","Cerdo"],
-    "Geng Shen":["Perro","Cerdo"], "Xin You":  ["Perro","Cerdo"],
-    "Ren Xu":   ["Perro","Cerdo"], "Gui Hai":  ["Perro","Cerdo"],
-    # Col 2: Jia Chen
+    # Col 1: Jia Yin  →  Muerte y Vacío: Rata, Buey
+    "Jia Yin":  ["Rata","Buey"], "Yi Mao":   ["Rata","Buey"],
+    "Bing Chen":["Rata","Buey"], "Ding Si":  ["Rata","Buey"],
+    "Wu Wu":    ["Rata","Buey"], "Ji Wei":   ["Rata","Buey"],
+    "Geng Shen":["Rata","Buey"], "Xin You":  ["Rata","Buey"],
+    "Ren Xu":   ["Rata","Buey"], "Gui Hai":  ["Rata","Buey"],
+    # Col 2: Jia Chen  →  Muerte y Vacío: Tigre, Conejo
     "Jia Chen": ["Tigre","Conejo"], "Yi Si":   ["Tigre","Conejo"],
     "Bing Wu":  ["Tigre","Conejo"], "Ding Wei": ["Tigre","Conejo"],
     "Wu Shen":  ["Tigre","Conejo"], "Ji You":   ["Tigre","Conejo"],
     "Geng Xu":  ["Tigre","Conejo"], "Xin Hai":  ["Tigre","Conejo"],
     "Ren Zi":   ["Tigre","Conejo"], "Gui Chou": ["Tigre","Conejo"],
-    # Col 3: Jia Wu
-    "Jia Wu":   ["Rata","Buey"],   "Yi Wei":   ["Rata","Buey"],
-    "Bing Shen":["Rata","Buey"],   "Ding You": ["Rata","Buey"],
-    "Wu Xu":    ["Rata","Buey"],   "Ji Hai":   ["Rata","Buey"],
-    "Geng Zi":  ["Rata","Buey"],   "Xin Chou": ["Rata","Buey"],
-    "Ren Yin":  ["Rata","Buey"],   "Gui Mao":  ["Rata","Buey"],
-    # Col 4: Jia Shen
+    # Col 3: Jia Wu  →  Muerte y Vacío: Dragón, Serpiente
+    "Jia Wu":   ["Dragón","Serpiente"], "Yi Wei":   ["Dragón","Serpiente"],
+    "Bing Shen":["Dragón","Serpiente"], "Ding You": ["Dragón","Serpiente"],
+    "Wu Xu":    ["Dragón","Serpiente"], "Ji Hai":   ["Dragón","Serpiente"],
+    "Geng Zi":  ["Dragón","Serpiente"], "Xin Chou": ["Dragón","Serpiente"],
+    "Ren Yin":  ["Dragón","Serpiente"], "Gui Mao":  ["Dragón","Serpiente"],
+    # Col 4: Jia Shen  →  Muerte y Vacío: Caballo, Cabra
     "Jia Shen": ["Caballo","Cabra"], "Yi You":  ["Caballo","Cabra"],
     "Bing Xu":  ["Caballo","Cabra"], "Ding Hai":["Caballo","Cabra"],
     "Wu Zi":    ["Caballo","Cabra"], "Ji Chou": ["Caballo","Cabra"],
     "Geng Yin": ["Caballo","Cabra"], "Xin Mao":["Caballo","Cabra"],
     "Ren Chen": ["Caballo","Cabra"], "Gui Si":  ["Caballo","Cabra"],
-    # Col 5: Jia Xu
-    "Jia Xu":   ["Dragón","Serpiente"], "Yi Hai":  ["Dragón","Serpiente"],
-    "Bing Zi":  ["Dragón","Serpiente"], "Ding Chou":["Dragón","Serpiente"],
-    "Wu Yin":   ["Dragón","Serpiente"], "Ji Mao":  ["Dragón","Serpiente"],
-    "Geng Chen":["Dragón","Serpiente"], "Xin Si":  ["Dragón","Serpiente"],
-    "Ren Wu":   ["Dragón","Serpiente"], "Gui Wei": ["Dragón","Serpiente"],
-    # Col 6: Jia Zi
-    "Jia Zi":   ["Mono","Gallo"],  "Yi Chou":  ["Mono","Gallo"],
-    "Bing Yin": ["Mono","Gallo"],  "Ding Mao": ["Mono","Gallo"],
-    "Wu Chen":  ["Mono","Gallo"],  "Ji Si":    ["Mono","Gallo"],
-    "Geng Wu":  ["Mono","Gallo"],  "Xin Wei":  ["Mono","Gallo"],
-    "Ren Shen": ["Mono","Gallo"],  "Gui You":  ["Mono","Gallo"],
+    # Col 5: Jia Xu  →  Muerte y Vacío: Mono, Gallo
+    "Jia Xu":   ["Mono","Gallo"], "Yi Hai":  ["Mono","Gallo"],
+    "Bing Zi":  ["Mono","Gallo"], "Ding Chou":["Mono","Gallo"],
+    "Wu Yin":   ["Mono","Gallo"], "Ji Mao":  ["Mono","Gallo"],
+    "Geng Chen":["Mono","Gallo"], "Xin Si":  ["Mono","Gallo"],
+    "Ren Wu":   ["Mono","Gallo"], "Gui Wei": ["Mono","Gallo"],
+    # Col 6: Jia Zi  →  Muerte y Vacío: Perro, Cerdo
+    "Jia Zi":   ["Perro","Cerdo"], "Yi Chou":  ["Perro","Cerdo"],
+    "Bing Yin": ["Perro","Cerdo"], "Ding Mao": ["Perro","Cerdo"],
+    "Wu Chen":  ["Perro","Cerdo"], "Ji Si":    ["Perro","Cerdo"],
+    "Geng Wu":  ["Perro","Cerdo"], "Xin Wei":  ["Perro","Cerdo"],
+    "Ren Shen": ["Perro","Cerdo"], "Gui You":  ["Perro","Cerdo"],
 }
+
+# ------------------------------------------------------------
+# PILARES AFINES - columnas de los 60 pilares (xun)
+# Cada columna agrupa 10 pilares que resuenan entre sí. Los "afines"
+# de un pilar son los otros 9 miembros de su misma columna. Los 2
+# animales de Muerte y Vacío de esa columna nunca son miembros de
+# ella (son las 2 ramas que quedan fuera del ciclo de 10 de ese xun).
+# ------------------------------------------------------------
+PILARES_COLUMNAS = [
+    ["Jia Yin","Yi Mao","Bing Chen","Ding Si","Wu Wu","Ji Wei","Geng Shen","Xin You","Ren Xu","Gui Hai"],
+    ["Jia Chen","Yi Si","Bing Wu","Ding Wei","Wu Shen","Ji You","Geng Xu","Xin Hai","Ren Zi","Gui Chou"],
+    ["Jia Wu","Yi Wei","Bing Shen","Ding You","Wu Xu","Ji Hai","Geng Zi","Xin Chou","Ren Yin","Gui Mao"],
+    ["Jia Shen","Yi You","Bing Xu","Ding Hai","Wu Zi","Ji Chou","Geng Yin","Xin Mao","Ren Chen","Gui Si"],
+    ["Jia Xu","Yi Hai","Bing Zi","Ding Chou","Wu Yin","Ji Mao","Geng Chen","Xin Si","Ren Wu","Gui Wei"],
+    ["Jia Zi","Yi Chou","Bing Yin","Ding Mao","Wu Chen","Ji Si","Geng Wu","Xin Wei","Ren Shen","Gui You"],
+]
+
+# Mapa directo pilar → columna completa (lista de 10 miembros)
+PILAR_A_COLUMNA = {}
+for _col in PILARES_COLUMNAS:
+    for _p in _col:
+        PILAR_A_COLUMNA[_p] = _col
 
 MUERTE_VACIO_PILARES = {
     "hora": [
@@ -725,9 +758,26 @@ def get_muerte_vacio(dm_tronco, dm_rama):
     return MUERTE_VACIO.get(pilar_key, [])
 
 
+def get_pilares_afines(tronco, rama):
+    """Obtiene los 9 pilares afines (misma columna/xun de los 60 pilares)
+    de un pilar dado, excluyendo al propio pilar. Devuelve lista vacía
+    si el pilar no se encuentra en la tabla de columnas."""
+    rama_pinyin = RAMA_A_PINYIN.get(rama, rama)
+    pilar_key = f"{tronco} {rama_pinyin}"
+    columna = PILAR_A_COLUMNA.get(pilar_key, [])
+    return [p for p in columna if p != pilar_key]
+
+
 def get_camara_roja(dm_tronco):
     """Obtiene el animal de cámara roja según el tronco del día maestro."""
     return CAMARA_ROJA.get(dm_tronco, "")
+
+
+def get_casamentero(dm_rama):
+    """Obtiene el animal Casamentero según la rama (animal) del día
+    maestro. Devuelve dict {"animal": ..., "es_tambien_karmico": ...}
+    o dict vacío si no se encuentra."""
+    return CASAMENTERO_POR_RAMA.get(dm_rama, {})
 
 
 def calcular_yin_yang(carta_fija):
@@ -914,17 +964,87 @@ def detectar_conflictos_ramas(pilares, sexo):
     return resultados
 
 
-def detectar_relaciones(pilares, dm_tronco, dm_rama, sexo, flor_melocoton_animal=""):
-    """Detecta cámara roja, relaciones kármicas, casamentero, muerte y vacío."""
-    animales_en_carta = {}
-    for nombre_pilar, datos in pilares.items():
-        animal = datos.get("rama",{}).get("nombre","")
+def _animales_de_pilares(pilares_dict):
+    """Helper: mapea animal -> nombre_pilar a partir de un dict de pilares."""
+    animales = {}
+    for nombre_pilar, datos in (pilares_dict or {}).items():
+        animal = datos.get("rama", {}).get("nombre", "")
         if animal:
-            animales_en_carta[animal] = nombre_pilar
+            animales[animal] = nombre_pilar
+    return animales
 
-    # Cámara roja
+
+def _detectar_par_animal(lista_pares, animales_natal, animales_moviles, clave_extra_natal, clave_extra_movil):
+    """Detecta pares de 2 animales (kármicos o casamentero) contra la carta
+    natal y, si se proveen, contra los pilares móviles (suerte / año en
+    curso). Devuelve dos listas: completos (o activables por tránsito) y
+    parciales (un solo animal presente, sin completar)."""
+    completos = []
+    parciales = []
+    for rel in lista_pares:
+        animales = rel["animales"]
+        presentes_natal = {a: animales_natal.get(a) for a in animales if animales_natal.get(a)}
+        faltantes = [a for a in animales if a not in presentes_natal]
+
+        if not faltantes:
+            completos.append({
+                "animales": animales,
+                "pilares": [presentes_natal[a] for a in animales],
+                "estado": "completo_natal",
+                clave_extra_natal: rel.get(clave_extra_natal, False),
+            })
+            continue
+
+        if animales_moviles:
+            faltan_en_moviles = [a for a in faltantes if a not in animales_moviles]
+            if not faltan_en_moviles:
+                pilares_combinados = [presentes_natal.get(a) or animales_moviles.get(a) for a in animales]
+                completos.append({
+                    "animales": animales,
+                    "pilares": pilares_combinados,
+                    "estado": "activable_transito",
+                    "animal_transito": faltantes,
+                    "pilar_transito": [animales_moviles[a] for a in faltantes],
+                    clave_extra_natal: rel.get(clave_extra_natal, False),
+                })
+                continue
+
+        if presentes_natal:
+            animal_presente = list(presentes_natal.keys())[0]
+            parciales.append({
+                "animales": animales,
+                "animal_presente": animal_presente,
+                "pilar_presente": presentes_natal[animal_presente],
+                "animal_faltante": faltantes,
+            })
+
+    return completos, parciales
+
+
+def detectar_relaciones(pilares, dm_tronco, dm_rama, sexo, flor_melocoton_animal="", pilares_moviles=None):
+    """Detecta cámara roja, relaciones kármicas, casamentero, muerte y
+    vacío y pilares afines por columna.
+
+    `pilares_moviles` es opcional: un dict con los pilares de suerte y/o
+    año en curso (misma estructura que `pilares`), usado para detectar
+    pares kármicos o casamenteros que se completan por tránsito aunque
+    no estén completos en la carta natal.
+    """
+    animales_en_carta = _animales_de_pilares(pilares)
+    animales_moviles = _animales_de_pilares(pilares_moviles) if pilares_moviles else {}
+
+    # Cámara roja: mismo criterio que Casamentero (se determina por el
+    # Día Maestro, con tronco en este caso) y también puede activarse
+    # por tránsito (año, mes o ciclo de suerte con ese animal).
     camara_roja_animal = get_camara_roja(dm_tronco)
-    camara_roja_pilares = [p for a,p in animales_en_carta.items() if a == camara_roja_animal]
+    camara_roja_pilares_natal = [p for a, p in animales_en_carta.items() if a == camara_roja_animal]
+    camara_roja_pilares_transito = [p for a, p in animales_moviles.items() if a == camara_roja_animal]
+    camara_roja = {
+        "animal": camara_roja_animal,
+        "pilares_natal": camara_roja_pilares_natal,
+        "pilares_transito": camara_roja_pilares_transito,
+        "activo": bool(camara_roja_pilares_natal or camara_roja_pilares_transito),
+    }
 
     # Flor de melocotón
     flor_elem = ""
@@ -934,30 +1054,33 @@ def detectar_relaciones(pilares, dm_tronco, dm_rama, sexo, flor_melocoton_animal
             break
     flor_desc = FLOR_MELOCOTON.get(flor_elem,"")
 
-    # Relaciones kármicas
-    karmicas_detectadas = []
-    for rel in RELACIONES_KARMICAS:
-        match = [animales_en_carta.get(a) for a in rel["animales"]]
-        if all(match):
-            karmicas_detectadas.append({
-                "animales": rel["animales"],
-                "pilares": match,
-                "desc": rel["desc"],
-                "es_tambien_casamentero": rel.get("es_tambien_casamentero", False),
-            })
+    # Relaciones kármicas (completas en carta natal, activables por tránsito, o parciales)
+    karmicas_completas, karmicas_parciales = _detectar_par_animal(
+        RELACIONES_KARMICAS, animales_en_carta, animales_moviles,
+        "es_tambien_casamentero", "es_tambien_casamentero"
+    )
+    # recuperar la descripción propia de cada par kármico detectado
+    for det in karmicas_completas:
+        for rel in RELACIONES_KARMICAS:
+            if set(rel["animales"]) == set(det["animales"]):
+                det["desc"] = rel["desc"]
+                break
 
-    # Casamentero
-    casamentero_detectado = []
-    for rel in CASAMENTERO:
-        match = [animales_en_carta.get(a) for a in rel["animales"]]
-        if all(match):
-            casamentero_detectado.append({
-                "animales": rel["animales"],
-                "pilares": match,
-                "es_tambien_karmico": rel.get("es_tambien_karmico", False),
-            })
+    # Casamentero: se determina por la RAMA del Día Maestro (igual que la
+    # Cámara Roja), no por búsqueda de pares en cualquier pilar.
+    casamentero_info = get_casamentero(dm_rama)
+    casamentero_animal = casamentero_info.get("animal", "")
+    casamentero_pilares_natal = [p for a, p in animales_en_carta.items() if a == casamentero_animal]
+    casamentero_pilares_transito = [p for a, p in animales_moviles.items() if a == casamentero_animal]
+    casamentero = {
+        "animal": casamentero_animal,
+        "es_tambien_karmico": casamentero_info.get("es_tambien_karmico", False),
+        "pilares_natal": casamentero_pilares_natal,
+        "pilares_transito": casamentero_pilares_transito,
+        "activo": bool(casamentero_pilares_natal or casamentero_pilares_transito),
+    }
 
-    # Muerte y vacío
+    # Muerte y vacío (del día maestro, sobre los 4 pilares fijos)
     mv_animales = get_muerte_vacio(dm_tronco, dm_rama)
     mv_detectado = []
     for animal in mv_animales:
@@ -969,12 +1092,31 @@ def detectar_relaciones(pilares, dm_tronco, dm_rama, sexo, flor_melocoton_animal
                 "significados": MUERTE_VACIO_PILARES.get(pilar, []),
             })
 
+    # Pilares afines por columna: uno por cada pilar fijo presente en la carta
+    pilares_afines = {}
+    for nombre_pilar, datos in pilares.items():
+        tronco_nombre = datos.get("tronco", {}).get("nombre", "")
+        rama_nombre = datos.get("rama", {}).get("nombre", "")
+        if not tronco_nombre or not rama_nombre:
+            continue
+        rama_pinyin = RAMA_A_PINYIN.get(rama_nombre, rama_nombre)
+        pilar_key = f"{tronco_nombre} {rama_pinyin}"
+        afines = get_pilares_afines(tronco_nombre, rama_nombre)
+        mv_columna = MUERTE_VACIO.get(pilar_key, [])
+        pilares_afines[nombre_pilar] = {
+            "pilar": pilar_key,
+            "afines": afines,
+            "muerte_vacio_columna": mv_columna,
+        }
+
     return {
-        "camara_roja": {"animal": camara_roja_animal, "pilares": camara_roja_pilares},
+        "camara_roja": camara_roja,
         "flor_melocoton": {"animal": flor_melocoton_animal, "elemento": flor_elem, "desc": flor_desc},
-        "karmicas": karmicas_detectadas,
-        "casamentero": casamentero_detectado,
+        "karmicas": karmicas_completas,
+        "karmicas_parciales": karmicas_parciales,
+        "casamentero": casamentero,
         "muerte_vacio": mv_detectado,
+        "pilares_afines": pilares_afines,
     }
 
 
