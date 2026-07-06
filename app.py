@@ -322,9 +322,25 @@ def validar():
         analisis_elem["bloqueos_financieros"] = bloqueos
 
         # Relaciones
+        # Se pasan por separado los pilares fijos (los 4 reales de la carta
+        # natal) y los pilares móviles (pilar de suerte, año en curso y
+        # cualquier pilar extra agregado por el astrólogo), para que
+        # Casamentero y Cámara Roja puedan distinguir si están activos
+        # en la carta natal o si se activan por tránsito, y para que
+        # "Pilares afines" se calcule únicamente sobre los 4 pilares
+        # reales (Año/Mes/Día/Hora).
+        pilares_moviles = {}
+        if cm.get("pilar_suerte"):
+            pilares_moviles["pilar_suerte"] = cm["pilar_suerte"]
+        if cm.get("anio_curso"):
+            pilares_moviles["anio_curso"] = cm["anio_curso"]
+        for extra in pilares_extra:
+            pilares_moviles[extra["nombre"]] = extra
+
         flor_animal = dm.get("flor_melocoton","")
         relaciones  = detectar_relaciones(
-            todos_pilares, dm_tronco, dm_rama, sexo, flor_animal
+            carta_fija, dm_tronco, dm_rama, sexo, flor_animal,
+            pilares_moviles=pilares_moviles
         )
 
         # Salud especial
@@ -521,13 +537,28 @@ INSTRUCCIONES_SECCION_08 = """
 INSTRUCCIONES — SECCIÓN 08: Relaciones
 ═══════════════════════════════════
 Generá EXACTAMENTE 1 sección (numero "08", titulo "Relaciones"):
-1. Cámara roja: animal, si aparece en algún pilar de la carta
-2. Flor de melocotón: animal, elemento, razón de atracción
-3. Hombre/Mujer noble: animales y cuándo se activan
-4. Relaciones kármicas detectadas: descripción del par y en qué pilares aparece
-5. Casamentero detectado: pares y pilares
-6. Pilares afines y muerte y vacío: animales de MV ({muerte_vacio}), en qué pilares aparecen y qué puede significar
-7. Si algún par es a la vez kármico y casamentero, mencionar la dualidad
+1. Cámara roja: en RELACIONES.camara_roja tenés {{"animal":..., "pilares_natal":[...], "pilares_transito":[...], "activo": true/false}}.
+   Si "activo" es false, explicar que no está encendida en este momento y en qué tipo de ciclo (año, mes o
+   pilar de suerte) con ese animal podría activarse. Si "pilares_natal" tiene elementos, está en la carta fija;
+   si solo "pilares_transito" tiene elementos, está activa por tránsito actual.
+2. Flor de melocotón: animal, elemento, razón de atracción.
+3. Hombre/Mujer noble: animales y cuándo se activan.
+4. Relaciones kármicas: en RELACIONES.karmicas están las detectadas (completas en la carta natal o activadas
+   por tránsito, con su "estado" indicándolo), con su descripción y pilares. En RELACIONES.karmicas_parciales
+   están los pares con un solo animal presente y sin completar: mencionar cuál animal falta y que podría
+   completarse si ese animal llega por año, mes o pilar de suerte.
+5. Casamentero: SE DETERMINA POR EL DÍA MAESTRO (igual que la cámara roja, no es un par libre). En
+   RELACIONES.casamentero tenés {{"animal":..., "pilares_natal":[...], "pilares_transito":[...], "activo":...,
+   "es_tambien_karmico":...}}. Explicar cuál es el animal Casamentero de esta persona, si está o no presente
+   en su carta natal, y si se activa por el pilar de suerte o el año en curso. NUNCA omitir esta sección aunque
+   "activo" sea false: en ese caso explicar qué significa no tenerlo activo y qué animal, año o ciclo lo activaría.
+6. Pilares afines: en RELACIONES.pilares_afines hay una entrada por cada pilar fijo (hora/dia/mes/anio) con
+   {{"pilar": "Tronco Rama", "afines": [...9 pilares...], "muerte_vacio_columna": [...]}}. Para cada uno de los
+   4 pilares, mencionar sus pilares afines (personas o ciclos con esos pilares tienden a la compatibilidad y
+   comprensión mutua) y aclarar que los animales de "muerte_vacio_columna" NO pertenecen a esa columna.
+7. Muerte y vacío del día maestro: animales de MV ({muerte_vacio}), en qué pilares de la carta natal aparecen
+   (ver RELACIONES.muerte_vacio) y qué puede significar en cada uno.
+8. Si algún par es a la vez kármico y casamentero, mencionar la dualidad.
 """
 
 INSTRUCCIONES_SECCION_09 = """
