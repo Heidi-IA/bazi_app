@@ -672,18 +672,15 @@ DANOS_RAMAS = [
     {"animales":["Rata","Cabra"],      "efecto":"Produce confusión emocional que puede hacer que tomes decisiones incorrectas.", "psicologico":"Indecisión. No sabe hacia dónde ir, qué decisiones tomar. Tomar decisiones desde el corazón."},
     {"animales":["Buey","Caballo"],    "efecto":"Pérdida de oportunidades, evita que otras personas interfieran en tu vida.", "psicologico":"Inhabilidad para expresar emociones. ¿Alguna vez pudiste expresar tus emociones? Trabaja en ello."},
     {"animales":["Tigre","Serpiente"], "efecto":"Contratiempos en viajes y todo tipo de movimientos.", "psicologico":"Sentimientos de culpa. Dificultades para recibir, no se siente merecedor. Autoaceptación y autocuidado."},
-    {"animales":["Rata","Conejo"],     "efecto":"Genera conflictos emocionales frecuentes.", "psicologico":"Sentir que no eres fiel a las personas que te aman."},
 ]
 
 DESTRUCCIONES_RAMAS = [
     {"animales":["Conejo","Caballo"],  "efecto":"Pérdida de confianza con seres queridos por abusos.", "psicologico":"Persona descuidada."},
-    {"animales":["Cabra","Perro"],     "efecto":"Afecta la estabilidad de la persona, interfiriendo la familia con el trabajo.", "psicologico":"Estrés extremo, sentirse sin recursos."},
-    {"animales":["Serpiente","Mono"],  "efecto":"Situaciones que pueden cambiar de positivas a muy negativas.", "psicologico":"Tu visión y opinión no son reconocidas. Estancado en relaciones de 'hoy te amo, mañana te odio'."},
+    {"animales":["Cabra","Perro"],     "efecto":"Afecta la estabilidad de la persona, interfiriendo la familia con el trabajo.", "psicologico":"Exceso de pensamientos, que le generan parálisis."},
+    {"animales":["Serpiente","Mono"],  "efecto":"Situaciones que pueden cambiar de positivas a muy negativas.", "psicologico":"Estancado en relaciones de 'hoy te amo, mañana te odio'."},
     {"animales":["Rata","Gallo"],      "efecto":"Aislamiento por excesos: comida, drogas, alcohol, conductas sexuales inapropiadas.", "psicologico":"Difícil aceptar las opiniones de otros."},
     {"animales":["Buey","Dragón"],     "efecto":"Afecta la estabilidad de la persona con su familia y trabajo.", "psicologico":"Guardas emociones."},
     {"animales":["Tigre","Cerdo"],     "efecto":"Situaciones que pueden cambiar de positivas a muy negativas.", "psicologico":"Vulnerable a ser engañado fácilmente."},
-    {"animales":["Tigre","Serpiente"], "efecto":"Cambio de hábitos de positivos a negativos.", "psicologico":"Te sientes no valorado."},
-    {"animales":["Mono","Tigre"],      "efecto":"Malas conductas que te dañan provocadas por vos mismo.", "psicologico":"Sentirte responsable de todo."},
 ]
 
 CASTIGOS_RAMAS = [
@@ -691,6 +688,11 @@ CASTIGOS_RAMAS = [
         "tipo": "Castigo Ingrato",
         "animales": ["Tigre","Serpiente","Mono"],
         "efecto": "La persona ofrece ayuda o apoyo sin esperar nada a cambio, pero el resultado final es negativo. En lugar de recibir agradecimiento recibirá críticas o se meterá en problemas. Tendencia a ser engañada, defraudada o estafada. Esta condición puede llegar a producir depresión y aislamiento.",
+        "psicologico_pares": {
+            "Tigre-Serpiente": "Te sientes no valorado.",
+            "Serpiente-Mono": "Tu visión, opinión no son reconocidas.",
+            "Mono-Tigre": "Sentirte responsable de todo.",
+        }
     },
     {
         "tipo": "Castigo Intimidante",
@@ -706,6 +708,7 @@ CASTIGOS_RAMAS = [
         "tipo": "Castigo Incivilizado",
         "animales": ["Rata","Conejo"],
         "efecto": "Incivilizado significa falta de amabilidad, de educación, de valores, de lealtad. Las personas con este tipo de castigo usualmente son mal habladas, agresivas. La persona es emocionalmente inestable, se siente superior a los demás y puede presentar deseos sexuales incontrolables.",
+        "psicologico": "Sentir que no eres fiel a las personas que te aman.",
     },
     {
         "tipo": "Auto-Castigo — Dragón",
@@ -916,51 +919,159 @@ def detectar_combinaciones_ramas(pilares):
     return resultados
 
 
+NATAL_KEYS = {"anio", "mes", "dia", "hora"}
+
+
 def detectar_conflictos_ramas(pilares, sexo):
-    """Detecta choques, daños, destrucciones y castigos entre ramas."""
+    """Detecta choques, daños, destrucciones y castigos entre ramas.
+
+    `pilares` puede incluir tanto los 4 pilares fijos (claves "anio","mes",
+    "dia","hora") como pilares móviles (p. ej. "pilar_suerte","anio_curso")
+    y pilares extra agregados por el astrólogo.
+
+    Reglas de detección:
+    - Conflictos de 2 animales distintos (choques, daños, destrucciones,
+      Castigo Incivilizado): se detectan si ambos animales están presentes
+      en cualquier combinación de pilares (natal y/o móvil).
+    - Castigos de 3 animales (Ingrato, Intimidante): se detectan solo si
+      están los 3 presentes. Si los 3 están en la carta natal, se marca
+      como "natal". Si 2 están en la carta natal y el tercero llega por
+      el Pilar de Suerte o el Año en Curso, se marca como "temporal_transito"
+      y se aclara que es una activación temporal.
+    - Auto-castigos (mismo animal repetido: Dragón, Caballo, Gallo, Cerdo):
+      se detectan solo si ese animal aparece en DOS pilares distintos
+      (natal y/o móvil) — una sola aparición no activa el auto-castigo.
+    """
     resultados = []
-    animales_en_carta = {}
+    animales_multi = {}
     for nombre_pilar, datos in pilares.items():
-        animal = datos.get("rama",{}).get("nombre","")
+        animal = datos.get("rama", {}).get("nombre", "")
         if animal:
-            animales_en_carta[animal] = nombre_pilar
-    tabla = DIOSES_PERSONAS.get(sexo,{})
+            animales_multi.setdefault(animal, []).append(nombre_pilar)
+
+    tabla = DIOSES_PERSONAS.get(sexo, {})
+
+    def es_natal(pilar_nombre):
+        return pilar_nombre in NATAL_KEYS
 
     def get_personas(pilar_nombre):
-        datos = pilares.get(pilar_nombre,{})
-        dioses = ([datos.get("tronco",{}).get("dios","")] +
-                  [to.get("dios","") for to in datos.get("troncos_ocultos",[])])
+        datos = pilares.get(pilar_nombre, {})
+        dioses = ([datos.get("tronco", {}).get("dios", "")] +
+                  [to.get("dios", "") for to in datos.get("troncos_ocultos", [])])
         personas = []
         for d in set(dioses):
-            personas.extend(tabla.get(d,[]))
+            personas.extend(tabla.get(d, []))
         return list(set(personas))
 
-    def check_conf(lista, tipo):
+    def personas_de(pilares_list):
+        personas = []
+        for p in pilares_list:
+            if p:
+                personas.extend(get_personas(p))
+        return list(set(personas))
+
+    def ambito_de(match):
+        """Área de vida involucrada. Prioriza la combinación específica de
+        CHOQUE_PILARES (solo definida entre pilares fijos); si no existe
+        —por ejemplo cuando uno de los pilares es móvil (Pilar de Suerte
+        o Año en Curso)— arma el área a partir del/los pilar(es) fijo(s)
+        involucrados, usando PILARES_INFO."""
+        clave = frozenset(match)
+        ambito = CHOQUE_PILARES.get(clave, "")
+        if ambito:
+            return ambito
+        partes = []
+        for p in match:
+            if p in PILARES_INFO:
+                partes.append(f"{p.capitalize()}: {PILARES_INFO[p]['ambito']}")
+        return " / ".join(partes)
+
+    def check_par(lista, tipo):
+        """Conflictos de 2 animales distintos."""
         for item in lista:
-            match = [animales_en_carta.get(a) for a in item["animales"]]
-            if all(match):
-                clave = frozenset(match[:2]) if len(match) >= 2 else None
-                ambito = CHOQUE_PILARES.get(clave,"") if clave else ""
-                personas = []
-                for p in match:
-                    if p: personas.extend(get_personas(p))
+            a1, a2 = item["animales"]
+            p1 = animales_multi.get(a1, [])
+            p2 = animales_multi.get(a2, [])
+            if p1 and p2:
+                match = [p1[0], p2[0]]
                 res = {
                     "tipo": tipo,
                     "subtipo": item.get("tipo", tipo),
                     "animales": item["animales"],
                     "pilares": match,
                     "efecto": item["efecto"],
-                    "ambito": ambito,
-                    "personas": list(set(personas)),
+                    "ambito": ambito_de(match),
+                    "personas": personas_de(match),
                 }
                 if "psicologico" in item:
                     res["psicologico"] = item["psicologico"]
                 resultados.append(res)
 
-    check_conf(CHOQUES_RAMAS,      "choque")
-    check_conf(DANOS_RAMAS,        "daño")
-    check_conf(DESTRUCCIONES_RAMAS,"destrucción")
-    check_conf(CASTIGOS_RAMAS,     "castigo")
+    def check_castigo_triple(item):
+        """Castigos de 3 animales: completo en natal, o activable por tránsito."""
+        animales_item = item["animales"]
+        presentes = {}
+        for a in animales_item:
+            lst = animales_multi.get(a, [])
+            if lst:
+                natal_p = next((p for p in lst if es_natal(p)), None)
+                presentes[a] = natal_p if natal_p else lst[0]
+        if len(presentes) < 3:
+            return
+        match = [presentes[a] for a in animales_item]
+        transito = [a for a in animales_item if not es_natal(presentes[a])]
+        res = {
+            "tipo": "castigo",
+            "subtipo": item["tipo"],
+            "animales": animales_item,
+            "pilares": match,
+            "efecto": item["efecto"],
+            "ambito": ambito_de(match[:2]),
+            "personas": personas_de(match),
+            "activacion": "temporal_transito" if transito else "natal",
+        }
+        if "psicologico_pares" in item:
+            res["psicologico_pares"] = item["psicologico_pares"]
+        if transito:
+            res["animal_transito"] = transito
+            res["nota"] = (
+                f"Activación temporal: {', '.join(transito)} completa este castigo "
+                "desde el Pilar de Suerte o el Año en Curso, no desde la carta natal."
+            )
+        resultados.append(res)
+
+    def check_autocastigo(item):
+        """Auto-castigo: requiere el mismo animal en 2 pilares distintos."""
+        animal = item["animales"][0]
+        pilares_animal = animales_multi.get(animal, [])
+        if len(pilares_animal) >= 2:
+            match = pilares_animal[:2]
+            res = {
+                "tipo": "castigo",
+                "subtipo": item["tipo"],
+                "animales": item["animales"],
+                "pilares": match,
+                "efecto": item["efecto"],
+                "ambito": ambito_de(match),
+                "personas": personas_de(match),
+            }
+            if "psicologico" in item:
+                res["psicologico"] = item["psicologico"]
+            resultados.append(res)
+
+    check_par(CHOQUES_RAMAS, "choque")
+    check_par(DANOS_RAMAS, "daño")
+    check_par(DESTRUCCIONES_RAMAS, "destrucción")
+
+    for item in CASTIGOS_RAMAS:
+        animales_item = item["animales"]
+        if len(animales_item) == 3:
+            check_castigo_triple(item)
+        elif len(animales_item) == 2 and animales_item[0] == animales_item[1]:
+            check_autocastigo(item)
+        elif len(animales_item) == 2:
+            check_par([item], "castigo")
+
     return resultados
 
 
@@ -972,6 +1083,101 @@ def _animales_de_pilares(pilares_dict):
         if animal:
             animales[animal] = nombre_pilar
     return animales
+
+
+def _detectar_karmicas(pilares, pilares_moviles, sexo):
+    """Detecta relaciones kármicas reportando TODAS las combinaciones de
+    pilares que las completan — si un animal se repite en más de un pilar
+    (p. ej. la Serpiente en Mes y en Día), se reportan ambas conexiones
+    por separado, cada una con su propia área de vida y personas
+    involucradas. También detecta activación por tránsito."""
+    animales_natal = {}
+    for nombre_pilar, datos in pilares.items():
+        animal = datos.get("rama", {}).get("nombre", "")
+        if animal:
+            animales_natal.setdefault(animal, []).append(nombre_pilar)
+    animales_mov = {}
+    for nombre_pilar, datos in (pilares_moviles or {}).items():
+        animal = datos.get("rama", {}).get("nombre", "")
+        if animal:
+            animales_mov.setdefault(animal, []).append(nombre_pilar)
+
+    tabla = DIOSES_PERSONAS.get(sexo, {})
+    todos_los_pilares = {**pilares, **(pilares_moviles or {})}
+
+    def get_personas(pilar_nombre):
+        datos = todos_los_pilares.get(pilar_nombre, {})
+        dioses = ([datos.get("tronco", {}).get("dios", "")] +
+                  [to.get("dios", "") for to in datos.get("troncos_ocultos", [])])
+        personas = []
+        for d in set(dioses):
+            personas.extend(tabla.get(d, []))
+        return list(set(personas))
+
+    def ambito_de(match):
+        clave = frozenset(match)
+        ambito = CHOQUE_PILARES.get(clave, "")
+        if ambito:
+            return ambito
+        partes = []
+        for p in match:
+            if p in PILARES_INFO:
+                partes.append(f"{p.capitalize()}: {PILARES_INFO[p]['ambito']}")
+        return " / ".join(partes)
+
+    completos = []
+    parciales = []
+    for rel in RELACIONES_KARMICAS:
+        a1, a2 = rel["animales"]
+        p1_natal = animales_natal.get(a1, [])
+        p2_natal = animales_natal.get(a2, [])
+        combos_reportados = set()
+
+        def _agregar(p1, p2, estado, transito_info=None):
+            clave_combo = frozenset([p1, p2])
+            if clave_combo in combos_reportados:
+                return
+            combos_reportados.add(clave_combo)
+            entry = {
+                "animales": rel["animales"],
+                "pilares": [p1, p2],
+                "estado": estado,
+                "ambito": ambito_de([p1, p2]),
+                "personas": list(set(get_personas(p1) + get_personas(p2))),
+                "desc": rel["desc"],
+                "es_tambien_casamentero": rel.get("es_tambien_casamentero", False),
+            }
+            if transito_info:
+                entry.update(transito_info)
+            completos.append(entry)
+
+        for p1 in p1_natal:
+            for p2 in p2_natal:
+                _agregar(p1, p2, "completo_natal")
+
+        if not p1_natal:
+            for p1 in animales_mov.get(a1, []):
+                for p2 in p2_natal:
+                    _agregar(p1, p2, "activable_transito",
+                             {"animal_transito": [a1], "pilar_transito": [p1]})
+        if not p2_natal:
+            for p2 in animales_mov.get(a2, []):
+                for p1 in p1_natal:
+                    _agregar(p1, p2, "activable_transito",
+                             {"animal_transito": [a2], "pilar_transito": [p2]})
+
+        if p1_natal and not p2_natal and not animales_mov.get(a2):
+            parciales.append({
+                "animales": rel["animales"], "animal_presente": a1,
+                "pilar_presente": p1_natal[0], "animal_faltante": [a2],
+            })
+        elif p2_natal and not p1_natal and not animales_mov.get(a1):
+            parciales.append({
+                "animales": rel["animales"], "animal_presente": a2,
+                "pilar_presente": p2_natal[0], "animal_faltante": [a1],
+            })
+
+    return completos, parciales
 
 
 def _detectar_par_animal(lista_pares, animales_natal, animales_moviles, clave_extra_natal, clave_extra_movil):
@@ -1054,17 +1260,12 @@ def detectar_relaciones(pilares, dm_tronco, dm_rama, sexo, flor_melocoton_animal
             break
     flor_desc = FLOR_MELOCOTON.get(flor_elem,"")
 
-    # Relaciones kármicas (completas en carta natal, activables por tránsito, o parciales)
-    karmicas_completas, karmicas_parciales = _detectar_par_animal(
-        RELACIONES_KARMICAS, animales_en_carta, animales_moviles,
-        "es_tambien_casamentero", "es_tambien_casamentero"
+    # Relaciones kármicas: se reportan TODAS las conexiones de pilares que
+    # las completan (natal y/o por tránsito), incluyendo casos donde un
+    # mismo animal se repite en más de un pilar.
+    karmicas_completas, karmicas_parciales = _detectar_karmicas(
+        pilares, pilares_moviles, sexo
     )
-    # recuperar la descripción propia de cada par kármico detectado
-    for det in karmicas_completas:
-        for rel in RELACIONES_KARMICAS:
-            if set(rel["animales"]) == set(det["animales"]):
-                det["desc"] = rel["desc"]
-                break
 
     # Casamentero: se determina por la RAMA del Día Maestro (igual que la
     # Cámara Roja), no por búsqueda de pares en cualquier pilar.
